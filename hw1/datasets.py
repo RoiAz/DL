@@ -52,7 +52,7 @@ def torch_temporary_seed(seed: int):
 
 class RandomImageDataset(Dataset):
     """
-    A dataset representing a set of noise images of specified dimensions.
+    A dataset representing a set of noise images of specified dimensions.MN
     """
 
     def __init__(self, num_samples: int, num_classes: int, C: int, W: int, H: int):
@@ -83,7 +83,6 @@ class RandomImageDataset(Dataset):
         #  the random state outside this method.
         #  Raise a ValueError if the index is out of range.
         # ====== YOUR CODE: ======
-        
         if not ((index >= 0) & (index < self.num_samples)):
             raise ValueError()
         with torch_temporary_seed(index):
@@ -126,7 +125,8 @@ class ImageStreamDataset(IterableDataset):
         #  Yield tuples to produce an iterator over random images and labels.
         #  The iterator should produce an infinite stream of data.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        while True:
+            yield random_labelled_image(self.image_dim, self.num_classes)
         # ========================
 
 
@@ -154,10 +154,12 @@ class SubsetDataset(Dataset):
         #  Return the item at index + offset from the source dataset.
         #  Raise an IndexError if index is out of bounds.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        if (self.offset + index >= self.subset_len) or (index < 0):
+            raise IndexError()
+        return self.source_dataset[index + self.offset]
         # ========================
 
     def __len__(self):
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        return self.subset_len
         # ========================
