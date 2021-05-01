@@ -1,5 +1,7 @@
 import numpy as np
 import torch
+from sklearn.metrics import accuracy_score
+# from sklearn.model_selection import KFold
 from torch import Tensor
 from torch.utils.data import Dataset, DataLoader
 
@@ -31,7 +33,9 @@ class KNNClassifier(object):
         #     y_train.
         #  2. Save the number of classes as n_classes.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        x_train, y_train = dataloader_utils.flatten(dl_train)
+#         n_classes = int(y_train[0])
+        n_classes = y_train.unique().shape[0]
         # ========================
 
         self.x_train = x_train
@@ -63,7 +67,9 @@ class KNNClassifier(object):
             #  - Set y_pred[i] to the most common class among them
             #  - Don't use an explicit loop.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            value, index = torch.topk(dist_matrix[:,i], self.k, largest = False)
+            class_vector = self.y_train[index]
+            y_pred[i] = torch.argmax(class_vector.bincount())
             # ========================
 
         return y_pred
@@ -91,7 +97,18 @@ def l2_dist(x1: Tensor, x2: Tensor):
 
     dists = None
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+#     dists = np.sqrt((np.square(x1[:,np.newaxis]-x2).sum(axis=2)))
+
+
+    A = torch.sum(x1**2,1)
+    A.unsqueeze_(-1)
+    A = A.expand(x1.shape[0],x2.shape[0])
+    B = torch.sum(x2**2,1).T
+    B.unsqueeze_(-1)
+    B = B.expand(x2.shape[0],x1.shape[0]).T
+    AB = torch.matmul(x1, x2.T)
+    
+    dists = torch.sqrt(A-2*AB+B)
     # ========================
 
     return dists
@@ -111,7 +128,7 @@ def accuracy(y: Tensor, y_pred: Tensor):
     # TODO: Calculate prediction accuracy. Don't use an explicit loop.
     accuracy = None
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    accuracy = accuracy_score(y,y_pred)
     # ========================
 
     return accuracy
@@ -142,7 +159,54 @@ def find_best_k(ds_train: Dataset, k_choices, num_folds):
         #  random split each iteration), or implement something else.
 
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        ## spliting the data, not random
+        # first we will see how many data we will have in eath folder
+        ds_len = len(ds_train)
+        fold_len = ds_len//num_folds
+        
+        # set a vector of how to split the data, every part will be fold_len long, and the last one will also inclode the remainder from the divider
+        vec_split_lens = np.ones(num_folds) * fold_len
+        vec_split_lens[-1] = ds_len - fold_len*(num_folds-1) # set the end of the vectory to inclode the remainder from the divider
+        vec_split_lens = vec_split_lens.astype(np.int32)
+        
+        # now that we know how mush data we will have in eath folder. we will creat a list of folder idexs
+        folder_id = []
+        folder_start = 0
+        for i in range(len(vec_split_lens)):
+            folder_id.append(list(range(folder_start, folder_start+vec_split_lens[i])))
+            folder_start += vec_split_lens[i]
+        
+        ## train
+        sub_accuracie = np.zeros(num_folds)
+        for i in range(num_folds):
+            #get valid train
+            valid = DataLoader(torch.utils.data.Subset(ds_train, folder_id[i]))
+            temp = sum(folder_id[:i] + folder_id[i + 1:], []) # skip over the valid folder
+            train = DataLoader(torch.utils.data.Subset(ds_train, temp))
+            # train the model
+            model.train(train)
+            x_valid, y_valid = dataloader_utils.flatten(valid)
+            sub_accuracie[i] = accuracy(y_valid, model.predict(x_valid))
+            
+        # append to accuracie list
+        accuracies.append(sub_accuracie)
+        """"
+        cv = KFold(i, True)
+        for val in i:
+            kf_predicts = []
+            for train_index, test_index in cv.split(ds_train):
+                # print("Train Index: ", train_index, "\n")
+                # print("Test Index: ", test_index)
+
+                X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+                classifier = ID3(X_train, X_test)
+                ID3.fit(classifier.root, val)
+                kf_predicts.append(classifier.predict())
+            M_pred_mean = 0
+            for elem in kf_predicts:
+                M_pred_mean += elem / len(kf_predicts)
+            accuracies.append(M_pred_mean)
+        """"
         # ========================
 
     best_k_idx = np.argmax([np.mean(acc) for acc in accuracies])
