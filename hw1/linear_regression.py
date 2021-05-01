@@ -32,7 +32,7 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
 
         y_pred = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        y_pred = np.dot(X,self.weights_)
         # ========================
 
         return y_pred
@@ -51,7 +51,12 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
 
         w_opt = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        N, M = X.shape
+        XT = np.transpose(X)
+        I = np.identity(M)
+        t_lambda = N * self.reg_lambda * I
+        t_lambda[0, 0] = 0 #remove bias
+        w_opt = np.dot(np.dot(np.linalg.inv(np.dot(XT, X) + t_lambda), XT), y)
         # ========================
 
         self.weights_ = w_opt
@@ -77,7 +82,12 @@ def fit_predict_dataframe(
     """
     # TODO: Implement according to the docstring description.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    targ_val = df.loc[:,target_name]
+    if feature_names:
+        df = df.filter(items=feature_names)
+    else:
+        df = df.loc[:, df.columns != target_name]
+    y_pred = model.fit_predict(df, targ_val)
     # ========================
     return y_pred
 
@@ -100,7 +110,9 @@ class BiasTrickTransformer(BaseEstimator, TransformerMixin):
 
         xb = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        N, D = X.shape
+        b = np.ones((N,1))
+        xb = np.hstack((b,X))
         # ========================
 
         return xb
@@ -117,7 +129,7 @@ class BostonFeaturesTransformer(BaseEstimator, TransformerMixin):
         # TODO: Your custom initialization, if needed
         # Add any hyperparameters you need and save them as above
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.unwanted_feat = [0]
         # ========================
 
     def fit(self, X, y=None):
@@ -139,7 +151,8 @@ class BostonFeaturesTransformer(BaseEstimator, TransformerMixin):
 
         X_transformed = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        best_feat = np.delete(X,self.unwanted_feat,axis=1)
+        X_transformed = PolynomialFeatures(degree=self.degree).fit_transform(best_feat)
         # ========================
 
         return X_transformed
@@ -163,7 +176,18 @@ def top_correlated_features(df: DataFrame, target_feature, n=5):
     # TODO: Calculate correlations with target and sort features by it
 
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    #extracting values 
+    targ_val = df.loc[:,target_feature]
+    feats = df.loc[:, df.columns != target_feature]
+    corr = []    
+    #calc corr
+    for feat_name in feats:
+        feat_val = df.loc[:,feat_name]
+        corr_abs = np.abs(np.corrcoef(targ_val,feat_val)[0][1])
+        corr.append((feat_name,corr_abs))
+    corr.sort(key=lambda x:x[1])
+    corr.reverse()
+    top_n_features, top_n_corr = zip(*corr[:n])
     # ========================
 
     return top_n_features, top_n_corr
@@ -179,7 +203,7 @@ def mse_score(y: np.ndarray, y_pred: np.ndarray):
 
     # TODO: Implement MSE using numpy.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    mse = np.square(np.subtract(y,y_pred)).mean()
     # ========================
     return mse
 
@@ -194,7 +218,9 @@ def r2_score(y: np.ndarray, y_pred: np.ndarray):
 
     # TODO: Implement R^2 using numpy.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    up = np.sum(np.square(np.subtract(y,y_pred)))
+    dw = np.sum(np.square(np.subtract(y,y.mean())))
+    r2 = 1 - (up/dw)
     # ========================
     return r2
 
@@ -227,7 +253,18 @@ def cv_best_hyperparams(
     #  - You can use MSE or R^2 as a score.
 
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    scores_params = {}
+    for d in degree_range:
+        for l in lambda_range:
+            params = {
+            'linearregressor__reg_lambda': l,
+            'bostonfeaturestransformer__degree':d
+            }
+            model.set_params(**params)
+            scores = sklearn.model_selection.cross_val_score(model, X, y, scoring="neg_mean_squared_error", cv=k_folds)
+            mean_score = np.mean(scores)
+            scores_params[mean_score] = params
+    best_params = max(scores_params.items(), key=lambda x:x[0])[1]
     # ========================
 
     return best_params
