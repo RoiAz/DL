@@ -1,7 +1,7 @@
 import numpy as np
 import torch
-from sklearn.metrics import accuracy_score
-# from sklearn.model_selection import KFold
+#from sklearn.metrics import accuracy_score 
+# from sklearn.model_selection import KFold 
 from torch import Tensor
 from torch.utils.data import Dataset, DataLoader
 
@@ -33,14 +33,14 @@ class KNNClassifier(object):
         #     y_train.
         #  2. Save the number of classes as n_classes.
         # ====== YOUR CODE: ======
-        x_train, y_train = dataloader_utils.flatten(dl_train)
+        trainX, trainY = dataloader_utils.flatten(dl_train)
 #         n_classes = int(y_train[0])
-        n_classes = y_train.unique().shape[0]
+        classesN = trainY.unique().shape[0]
         # ========================
 
-        self.x_train = x_train
-        self.y_train = y_train
-        self.n_classes = n_classes
+        self.x_train = trainX
+        self.y_train = trainY
+        self.n_classes = classesN
         return self
 
     def predict(self, x_test: Tensor):
@@ -67,9 +67,9 @@ class KNNClassifier(object):
             #  - Set y_pred[i] to the most common class among them
             #  - Don't use an explicit loop.
             # ====== YOUR CODE: ======
-            value, index = torch.topk(dist_matrix[:,i], self.k, largest = False)
-            class_vector = self.y_train[index]
-            y_pred[i] = torch.argmax(class_vector.bincount())
+            val, idx = torch.topk(dist_matrix[:,i], self.k, largest = False)
+            class_vec = self.y_train[idx]
+            y_pred[i] = torch.argmax(class_vec.bincount())
             # ========================
 
         return y_pred
@@ -97,18 +97,33 @@ def l2_dist(x1: Tensor, x2: Tensor):
 
     dists = None
     # ====== YOUR CODE: ======
-#     dists = np.sqrt((np.square(x1[:,np.newaxis]-x2).sum(axis=2)))
+#     diff = x1[:,np.newaxis,:] -x2
+#     dists = np.sqrt(np.sum(np.square(A[:,np.newaxis,:] - B), axis=2))
+# #     dists = np.sqrt((np.square(x1[:,np.newaxis]-x2).sum(axis=2)))
 
+# #     x1SumSquare = np.sum(np.square(x1),axis=1);
+#     x1SumSquare = torch.sum(x1**2,1)
+# #     x2SumSquare = np.sum(np.square(x2),axis=1);
+#     x2SumSquare = torch.sum(x2**2,1)
 
-    A = torch.sum(x1**2,1)
-    A.unsqueeze_(-1)
-    A = A.expand(x1.shape[0],x2.shape[0])
-    B = torch.sum(x2**2,1).T
-    B.unsqueeze_(-1)
-    B = B.expand(x2.shape[0],x1.shape[0]).T
-    AB = torch.matmul(x1, x2.T)
+#     mul = np.dot(x1,x2.T);
+#     dists = np.sqrt(x1SumSquare[:,np.newaxis]+x2SumSquare-2*mul)
+
+    x1sum = torch.sum(x1**2,1)
+#     print(x1sum.shape)
+#     print(x1sum)
+    x1sum.unsqueeze_(-1)
+#     print(A.shape)
+#     print(A)
+    x1sum = x1sum.expand(x1.shape[0],x2.shape[0])
+#     print(x1sum.shape)
+#     print(x1sum)
+    x2sum = torch.sum(x2**2,1).T
+    x2sum.unsqueeze_(-1)
+    x2sum = x2sum.expand(x2.shape[0],x1.shape[0]).T
+    x1mulx2 = torch.matmul(x1, x2.T)
     
-    dists = torch.sqrt(A-2*AB+B)
+    dists = torch.sqrt(x1sum-2*x1mulx2+x2sum)
     # ========================
 
     return dists
@@ -128,7 +143,8 @@ def accuracy(y: Tensor, y_pred: Tensor):
     # TODO: Calculate prediction accuracy. Don't use an explicit loop.
     accuracy = None
     # ====== YOUR CODE: ======
-    accuracy = accuracy_score(y,y_pred)
+#     accuracy = accuracy_score(y,y_pred)
+    accuracy = torch.sum((y_pred-y) == 0).numpy()/y_pred.shape[0]
     # ========================
 
     return accuracy
@@ -159,7 +175,7 @@ def find_best_k(ds_train: Dataset, k_choices, num_folds):
         #  random split each iteration), or implement something else.
 
         # ====== YOUR CODE: ======
-        ## spliting the data, not random
+         ## spliting the data, not random
         # first we will see how many data we will have in eath folder
         ds_len = len(ds_train)
         fold_len = ds_len//num_folds
@@ -190,7 +206,8 @@ def find_best_k(ds_train: Dataset, k_choices, num_folds):
             
         # append to accuracie list
         accuracies.append(sub_accuracie)
-        """"
+        
+        """
         cv = KFold(i, True)
         for val in i:
             kf_predicts = []
@@ -206,7 +223,7 @@ def find_best_k(ds_train: Dataset, k_choices, num_folds):
             for elem in kf_predicts:
                 M_pred_mean += elem / len(kf_predicts)
             accuracies.append(M_pred_mean)
-        """"
+        """
         # ========================
 
     best_k_idx = np.argmax([np.mean(acc) for acc in accuracies])

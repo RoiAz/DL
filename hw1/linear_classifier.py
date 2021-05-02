@@ -23,7 +23,7 @@ class LinearClassifier(object):
 
         self.weights = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.weights = torch.normal(mean=0, std=weight_std, size=(n_features, n_classes))
         # ========================
 
     def predict(self, x: Tensor):
