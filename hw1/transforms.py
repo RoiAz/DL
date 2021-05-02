@@ -12,7 +12,7 @@ class TensorView(object):
     def __call__(self, tensor: torch.Tensor):
         # TODO: Use Tensor.view() to implement the transform.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        return tensor.view(self.view_dims)
         # ========================
 
 
@@ -66,5 +66,6 @@ class BiasTrick(object):
         #  Add a 1 at the beginning of the given tensor's feature dimension.
         #  Hint: See torch.cat().
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        bias = torch.ones(*x.shape[:-1], 1, dtype=x.dtype)
+        return torch.cat((bias,x),dim=x.dim()-1)
         # ========================
