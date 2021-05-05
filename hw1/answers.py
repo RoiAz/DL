@@ -46,7 +46,11 @@ You don't supose to choose hyper-parameters based on test-set.Because, it result
 
 part2_q1 = r"""
 **Your answer:**
-
+Increasing K doesn't necessarily means to improve generalization, depends to what point.
+Let's look at edge cases.
+When K=1 or too small, might lead to an overfitting will probabaly cause bad generalization. A wrong classification based on one closest neighbor far from it's group.
+When K=N (where N is number of samples, underfitting), might not ruien generalization but the prediction will be the classification with most points, always the same result.
+Therefore, increasing K too much will likely to ruine generalization.
 
 Write your answer using **markdown** and $\LaTeX$:
 ```python
@@ -59,6 +63,11 @@ An equation: $e^{i\pi} -1 = 0$
 
 part2_q2 = r"""
 **Your answer:**
+
+1. The suggestion to pick the best model hyperparameters with respect to train-set accuracy will cause poor generalization model.
+Where in k-fold cv, we pick the best hyperparameters with respect to validation.
+2.  The suggestion to pick the best model hyperparameters with respect to test-set accuracy creates overfitting model to the specific test-set.
+Where in k-fold cv, we pick the best hyperparameters regardless the test-set that the model will have to make predictions on, it is a better generalization.
 
 
 Write your answer using **markdown** and $\LaTeX$:
@@ -77,29 +86,40 @@ An equation: $e^{i\pi} -1 = 0$
 
 part3_q1 = r"""
 **Your answer:**
-The learning procces of the weights is accordingly to the delta value, meaning that for every delta value the weights will change accordingly so that
-the loss function value will be aproximaly the same.
+
+
+Write your answer using **markdown** and $\LaTeX$:
+```python
+# A code block
+a = 2
+```
+An equation: $e^{i\pi} -1 = 0$
 
 """
 
 part3_q2 = r"""
 **Your answer:**
-1. The linear model learns the weights of each class, in this case every class represent digit 0-9. For each class we have the same number of weights as the picture size.
-   The erros that we see derive from the fact that some calls have better score for specific prediction.
-   For example, we can see the wrong preditiction on the digit 9 that in this case is similar to 4, also those two classes have similar shape meaning the weights will get 
-   high value in similar ares.
-   
-2. This method is diffrent from KNN because in this approch we try to learn the feature of every digit trough the weights however in KNN we just measure the "distance" between the rest of the set and predict accordingly to that.
+
+
+Write your answer using **markdown** and $\LaTeX$:
+```python
+# A code block
+a = 2
+```
+An equation: $e^{i\pi} -1 = 0$
 
 """
 
 part3_q3 = r"""
 **Your answer:**
-We think that our learning rate is good:
-* Is not too high because it seems like we have right convergence - if that was the case we should expect higher loss.
-* Is not too small because it seems like its converge prrety fast - if that was the case we should expect slower convergence rate but maybe with lower loss.
 
-we think that our model is slightly overfit because we got good accuracy on the test set.
+
+Write your answer using **markdown** and $\LaTeX$:
+```python
+# A code block
+a = 2
+```
+An equation: $e^{i\pi} -1 = 0$
 
 """
 

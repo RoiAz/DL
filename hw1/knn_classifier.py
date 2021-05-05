@@ -175,37 +175,35 @@ def find_best_k(ds_train: Dataset, k_choices, num_folds):
         #  random split each iteration), or implement something else.
 
         # ====== YOUR CODE: ======
-         ## spliting the data, not random
-        # first we will see how many data we will have in eath folder
-        ds_len = len(ds_train)
-        fold_len = ds_len//num_folds
+        # splitting data
+        data_size = len(ds_train)
+        fold_size = data_size//num_folds
+
+        # splitting the data into fold_size sizes
+        length_of_split = np.ones(num_folds) * fold_size
+        length_of_split[-1] = data_size - fold_size*(num_folds-1) # set the end of the vectory to inclode the remainder from the divider
+        length_of_split = length_of_split.astype(np.int32)
         
-        # set a vector of how to split the data, every part will be fold_len long, and the last one will also inclode the remainder from the divider
-        vec_split_lens = np.ones(num_folds) * fold_len
-        vec_split_lens[-1] = ds_len - fold_len*(num_folds-1) # set the end of the vectory to inclode the remainder from the divider
-        vec_split_lens = vec_split_lens.astype(np.int32)
+        # creating list of folds indexes
+        id_fold = []
+        start_idx = 0
+        for idx in range(len(length_of_split)):
+            id_fold.append(list(range(start_idx, start_idx+length_of_split[idx])))
+            start_idx += length_of_split[idx]
         
-        # now that we know how mush data we will have in eath folder. we will creat a list of folder idexs
-        folder_id = []
-        folder_start = 0
-        for i in range(len(vec_split_lens)):
-            folder_id.append(list(range(folder_start, folder_start+vec_split_lens[i])))
-            folder_start += vec_split_lens[i]
-        
-        ## train
-        sub_accuracie = np.zeros(num_folds)
-        for i in range(num_folds):
-            #get valid train
-            valid = DataLoader(torch.utils.data.Subset(ds_train, folder_id[i]))
-            temp = sum(folder_id[:i] + folder_id[i + 1:], []) # skip over the valid folder
-            train = DataLoader(torch.utils.data.Subset(ds_train, temp))
+        # training part
+        acc_per_fold = np.zeros(num_folds)
+        for idx in range(num_folds):
+            # chose valid fold
+            validation_fold = DataLoader(torch.utils.data.Subset(ds_train, id_fold[idx]))
+            tmp = sum(id_fold[:idx] + id_fold[idx + 1:], []) 
+            train = DataLoader(torch.utils.data.Subset(ds_train, tmp))
             # train the model
             model.train(train)
-            x_valid, y_valid = dataloader_utils.flatten(valid)
-            sub_accuracie[i] = accuracy(y_valid, model.predict(x_valid))
+            x_valid, y_valid = dataloader_utils.flatten(validation_fold)
+            acc_per_fold[idx] = accuracy(y_valid, model.predict(x_valid))
             
-        # append to accuracie list
-        accuracies.append(sub_accuracie)
+        accuracies.append(acc_per_fold)
         
         """
         cv = KFold(i, True)
