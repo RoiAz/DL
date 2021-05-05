@@ -120,7 +120,7 @@ class LinearClassifier(object):
                 y_pred, x_scores = self.predict(x_batchi)
                 total_correct+= self.evaluate_accuracy(y_batchi,y_pred)
                 average_loss += loss_fn(x_batchi, y_batchi, x_scores, y_pred) + (weight_decay / 2) * torch.pow(torch.norm(self.weights),2)
-                self.weights -= learn_rate * (loss_fn.grad() + weight_decay * self.weights )git
+                self.weights -= learn_rate * (loss_fn.grad() + weight_decay * self.weights)
             total_correct /= len(dl_valid)
             average_loss /=  len(dl_valid)
             valid_res.accuracy.append(total_correct)
