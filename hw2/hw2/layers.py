@@ -318,7 +318,9 @@ class CrossEntropyLoss(Layer):
         # TODO: Compute the cross entropy loss using the last formula from the
         #  notebook (i.e. directly using the class scores).
         # ====== YOUR CODE: ======
-        
+        right = torch.log(torch.sum(torch.exp(x), dim=1))
+        left =  x[range(N), y]
+        loss = torch.mean(-left+ right)
         # ========================
 
         self.grad_cache["x"] = x
@@ -337,7 +339,10 @@ class CrossEntropyLoss(Layer):
 
         # TODO: Calculate the gradient w.r.t. the input x.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        softmax = torch.exp(x) / torch.sum(torch.exp(x), dim=1).view(-1,1)
+        dx = softmax
+        dx[range(N),y] -= 1
+        dx = dx * dout / N
         # ========================
 
         return dx
@@ -396,7 +401,9 @@ class Sequential(Layer):
         # TODO: Implement the forward pass by passing each layer's output
         #  as the input of the next.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        out = x
+        for l in self.layers:
+            out = l.forward(out)
         # ========================
 
         return out
@@ -408,7 +415,10 @@ class Sequential(Layer):
         #  Each layer's input gradient should be the previous layer's output
         #  gradient. Behold the backpropagation algorithm in action!
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        din = dout
+        revl = self.layers[::-1]
+        for l in revl:
+            din = l.backward(din)
         # ========================
 
         return din
@@ -418,7 +428,8 @@ class Sequential(Layer):
 
         # TODO: Return the parameter tuples from all layers.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        for l in self.layers:
+            params+= l.params()
         # ========================
 
         return params
