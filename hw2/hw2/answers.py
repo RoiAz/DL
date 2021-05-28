@@ -10,14 +10,12 @@ math (delimited with $$).
 
 part1_q1 = r"""
 **Your answer:**
+we have dZij/dXkm , i,k(0...127) j(0...2047), m(0...1023)
+the shape of  Jacobian will be 4D - (128,2048,128,1024)
 
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+for each Zij we have 128*1024 Xkm
+we have 128*2048 Zij
+so we will need 128*1024*128*2048*4b = 128Gb
 
 """
 

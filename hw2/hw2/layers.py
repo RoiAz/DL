@@ -100,7 +100,6 @@ class LeakyReLU(Layer):
         grad_x = torch.ones_like(x)
         grad_alphax = self.alpha * torch.ones_like(x)
         dx = torch.where(self.alpha*x > x ,grad_alphax , grad_x) * dout
-        
         # ========================
 
         return dx
@@ -366,7 +365,10 @@ class Dropout(Layer):
         #  Notice that contrary to previous layers, this layer behaves
         #  differently a according to the current training_mode (train/test).
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        if self.training_mode:
+            mask = np.random.binomial(1,p,size=x.shape) / self.p
+            out = X * mask
+
         # ========================
 
         return out
@@ -403,7 +405,7 @@ class Sequential(Layer):
         # ====== YOUR CODE: ======
         out = x
         for l in self.layers:
-            out = l.forward(out)
+            out = l.forward(out, **kw)
         # ========================
 
         return out
@@ -487,7 +489,16 @@ class MLP(Layer):
 
         # TODO: Build the MLP architecture as described.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        active_funcs= {'relu': ReLU, 'sigmoid': Sigmoid}
+        layers.append(Linear(in_features, hidden_features[0]))
+        layers.append(active_funcs[activation]())
+        lenh = len(hidden_features)
+        
+        for h in range(lenh-1):
+            layers.append(Linear(hidden_features[h],hidden_features[h+1]))
+            layers.append(active_funcs[activation]())
+            
+        layers.append(Linear(hidden_features[lenh-1], num_classes))
         # ========================
 
         self.sequence = Sequential(*layers)
