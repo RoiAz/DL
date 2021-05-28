@@ -10,6 +10,7 @@ math (delimited with $$).
 
 part1_q1 = r"""
 **Your answer:**
+
 we have dZij/dXkm , i,k(0...127) j(0...2047), m(0...1023)
 the shape of  Jacobian will be 4D - (128,2048,128,1024)
 
@@ -27,7 +28,9 @@ def part2_overfit_hp():
     wstd, lr, reg = 0, 0, 0
     # TODO: Tweak the hyperparameters until you overfit the small dataset.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    wstd = 0.001
+    lr = 0.001
+    reg = 0.001
     # ========================
     return dict(wstd=wstd, lr=lr, reg=reg)
 

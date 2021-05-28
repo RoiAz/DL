@@ -253,7 +253,8 @@ class Linear(Layer):
 
         # TODO: Compute the affine transform
         # ====== YOUR CODE: ======
-        out = torch.matmul(x , self.w.T) + self.b
+        #out = torch.matmul(x , self.w.T) + self.b
+        out = torch.mm(x, torch.t(self.w)) + self.b
         # ========================
 
         self.grad_cache["x"] = x

@@ -200,7 +200,16 @@ class LayerTrainer(Trainer):
         #  - Calculate number of correct predictions (make sure it's an int,
         #    not a tensor) as num_correct.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.optimizer.zero_grad()
+        yhat = self.model.forward(X)
+        loss = self.loss_fn.forward(y, yhat)
+        dz = self.loss_fn.backward
+        self.model.backward(dz)
+        self.optimizer.step()
+        pred_bin = int(y==yhat)
+        num_correct = torch.sum(pred_bin).item()
+        
+        
         # ========================
 
         return BatchResult(loss, num_correct)
