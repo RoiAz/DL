@@ -80,7 +80,26 @@ class Trainer(abc.ABC):
             #    save the model to the file specified by the checkpoints
             #    argument.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            actual_num_epochs += 1
+            max_batches = None
+            if "max_batches" in kw:
+                max_batches = kw.get("max_batches")
+            
+            train_res = self.train_epoch(dl_train,  max_batches=max_batches, verbose=verbose)
+            train_loss.append((sum(train_res.losses) / len(train_res.losses)))
+            train_acc.append(train_res.accuracy)
+            
+            test_res = self.test_epoch(dl_test,  max_batches=max_batches, verbose=verbose)
+            test_loss.append((sum(test_res.losses) / len(test_res.losses)))
+            test_acc.append(test_res.accuracy)
+            
+            if early_stopping and actual_num_epochs >=2:
+                if train_loss[-1] >= train_loss[-2]:
+                    epochs_without_improvement += 1
+                    if epochs_without_improvement == early_stopping:
+                        break
+                else:
+                    epochs_without_improvement=0
             # ========================
 
         return FitResult(actual_num_epochs, train_loss, train_acc, test_loss, test_acc)
@@ -201,15 +220,14 @@ class LayerTrainer(Trainer):
         #    not a tensor) as num_correct.
         # ====== YOUR CODE: ======
         self.optimizer.zero_grad()
-        yhat = self.model.forward(X)
-        loss = self.loss_fn.forward(y, yhat)
-        dz = self.loss_fn.backward
+        yhat_scores = self.model.forward(X)
+        loss = self.loss_fn.forward(yhat_scores, y)
+        dz = self.loss_fn.backward()
         self.model.backward(dz)
         self.optimizer.step()
-        pred_bin = int(y==yhat)
+        yhat = torch.argmax(yhat_scores, dim=1)
+        pred_bin = y==yhat
         num_correct = torch.sum(pred_bin).item()
-        
-        
         # ========================
 
         return BatchResult(loss, num_correct)
@@ -219,7 +237,11 @@ class LayerTrainer(Trainer):
 
         # TODO: Evaluate the Layer model on one batch of data.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        yhat_scores = self.model.forward(X)
+        loss = self.loss_fn.forward(yhat_scores, y)
+        yhat = torch.argmax(yhat_scores, dim=1)
+        pred_bin = y==yhat
+        num_correct = torch.sum(pred_bin).item()
         # ========================
 
         return BatchResult(loss, num_correct)

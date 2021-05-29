@@ -29,7 +29,7 @@ def part2_overfit_hp():
     # TODO: Tweak the hyperparameters until you overfit the small dataset.
     # ====== YOUR CODE: ======
     wstd = 0.001
-    lr = 0.001
+    lr = 0.01
     reg = 0.001
     # ========================
     return dict(wstd=wstd, lr=lr, reg=reg)
@@ -41,7 +41,7 @@ def part2_optim_hp():
     # TODO: Tweak the hyperparameters to get the best results you can.
     # You may want to use different learning rates for each optimizer.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    wstd, lr_vanilla, lr_momentum, lr_rmsprop, reg, = 0.5,  0.05,  0.005,  0.0003, 0.001
     # ========================
     return dict(
         wstd=wstd,
@@ -57,32 +57,26 @@ def part2_dropout_hp():
     # TODO: Tweak the hyperparameters to get the model to overfit without
     # dropout.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    wstd, lr, = 0.01, 0.001
     # ========================
     return dict(wstd=wstd, lr=lr)
 
 
 part2_q1 = r"""
 **Your answer:**
+section 1:
+yes, we can see that when we have dropout =0 we have overfit because we get low loss on train set and high loss on test set.
+On the other hand, when dropout !=0 we can see the opposite, the dropout here help to prevent overfit.
 
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+section 2:
+High droput may cause undefit, in that case we will get lower accuracy than mid dropout. 
+Also, if we sace the only the relevant parameters, the memory that high dropout require is lower than low dropout because we have less parmaters to train.
 
 """
 
 part2_q2 = r"""
 **Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
+it's possible because the accuracy is according to number of right predications while in loss we sum the total "distance" so we can get more right predictions and it the same time to increase the "distances" of wrong predictions.
 ```
 An equation: $e^{i\pi} -1 = 0$
 

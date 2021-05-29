@@ -253,8 +253,8 @@ class Linear(Layer):
 
         # TODO: Compute the affine transform
         # ====== YOUR CODE: ======
-        #out = torch.matmul(x , self.w.T) + self.b
-        out = torch.mm(x, torch.t(self.w)) + self.b
+        x = x.reshape((x.shape[0], -1))
+        out = torch.matmul(x , self.w.T) + self.b
         # ========================
 
         self.grad_cache["x"] = x
@@ -275,7 +275,6 @@ class Linear(Layer):
         # ====== YOUR CODE: ======
         dx = torch.matmul(dout, self.w)
         self.dw += torch.matmul(dout.T, x )
-        
         db =  torch.matmul(dout.T, torch.ones(dout.shape[0]))
         self.db +=db
         # ========================
@@ -367,9 +366,12 @@ class Dropout(Layer):
         #  differently a according to the current training_mode (train/test).
         # ====== YOUR CODE: ======
         if self.training_mode:
-            mask = np.random.binomial(1,p,size=x.shape) / self.p
-            out = X * mask
-
+            mask = torch.bernoulli(torch.full_like(x, self.p))
+           # out = (x * mask) / (1-self.p)
+            out = (x * mask)
+            self.grad_cache['mask'] = mask
+        else:
+            out = x * (1-self.p)
         # ========================
 
         return out
@@ -377,7 +379,10 @@ class Dropout(Layer):
     def backward(self, dout):
         # TODO: Implement the dropout backward pass.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        scaling_param = 1 if self.training_mode else (1 - self.p)
+        mask = self.grad_cache['mask'] if self.training_mode else torch.ones_like(dout)
+        dx = dout * mask * scaling_param
+
         # ========================
 
         return dx
@@ -493,11 +498,15 @@ class MLP(Layer):
         active_funcs= {'relu': ReLU, 'sigmoid': Sigmoid}
         layers.append(Linear(in_features, hidden_features[0]))
         layers.append(active_funcs[activation]())
+        if dropout:
+            layers.append(Dropout(dropout))
         lenh = len(hidden_features)
         
         for h in range(lenh-1):
             layers.append(Linear(hidden_features[h],hidden_features[h+1]))
             layers.append(active_funcs[activation]())
+            if dropout:
+                layers.append(Dropout(dropout))
             
         layers.append(Linear(hidden_features[lenh-1], num_classes))
         # ========================
