@@ -65,7 +65,7 @@ class ConvClassifier(nn.Module):
         self.classifier = self._make_classifier()
 
     def _make_feature_extractor(self):
-        in_channels, in_h, in_w, = tuple(self.in_size)
+        in_channels, in_h, in_w, = tuple(self.in_size) # 3,100,100
 
         layers = []
         # TODO: Create the feature extractor part of the model:
@@ -77,8 +77,43 @@ class ConvClassifier(nn.Module):
         #  Note: If N is not divisible by P, then N mod P additional
         #  CONV->ACTs should exist at the end, without a POOL after them.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.pools_num = 0
 
+        filters_lst = [in_channels] + self.channels
+#         print(f'{in_channels=}') 
+#         print(f'{self.channels=}')
+#         print(f'{filters_lst=}')
+        
+        # convolution parameters
+        conv_kernel  = self.conv_params["kernel_size"]
+        conv_stride =  1 if "stride" not in self.conv_params else self.conv_params["stride"]
+        conv_padding =  0 if "padding" not in self.conv_params else self.conv_params["padding"]
+        conv_dilation  = 1 if "dilation" not in self.conv_params else self.conv_params["dilation"]
+        #pooling parameters
+        pool_kernel = self.pooling_params["kernel_size"]
+        pool_stride =  None if "stride" not in self.pooling_params else self.pooling_params["stride"]
+        pool_padding =  0 if "padding" not in self.pooling_params else self.pooling_params["padding"]
+        pool_dilation =  1 if "dilation" not in self.pooling_params else self.pooling_params["dilation"]
+
+        
+        for idx in range(1, len(filters_lst)):
+            in_channels = filters_lst[idx-1] #3
+            out_channels = filters_lst[idx] #32
+            
+            layers.append(nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=conv_kernel, stride=conv_stride, padding=conv_padding, dilation=conv_dilation))
+
+            if self.activation_type == 'relu':
+                layers.append(ACTIVATIONS[str(self.activation_type)]())
+            elif self.activation_type == 'lrelu':
+                layers.append(ACTIVATIONS[str(self.activation_type)](negative_slope=self.activation_params["negative_slope"]))
+            
+            #performing pooling once in pool_every conv layers
+            if idx % self.pool_every == 0:
+                if self.pooling_type == 'max':
+                    layers.append(POOLINGS[str(self.pooling_type)](kernel_size=pool_kernel,stride=pool_stride,padding=pool_padding,dilation=pool_dilation))
+                elif self.pooling_type == 'avg':
+                    layers.append(POOLINGS[str(self.pooling_type)](kernel_size=pool_kernel,stride=pool_stride,padding=pool_padding))
+                self.pools_num += 1
         # ========================
         seq = nn.Sequential(*layers)
         return seq
@@ -92,7 +127,31 @@ class ConvClassifier(nn.Module):
         rng_state = torch.get_rng_state()
         try:
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            in_channels, in_h, in_w, = tuple(self.in_size)
+            count_pool = self.pool_every
+            
+            # convolution parameters
+            conv_kernel  = self.conv_params["kernel_size"]
+            conv_stride =  1 if "stride" not in self.conv_params else self.conv_params["stride"]
+            conv_padding =  0 if "padding" not in self.conv_params else self.conv_params["padding"]
+            conv_dilation  = 1 if "dilation" not in self.conv_params else self.conv_params["dilation"]
+            #pooling parameters
+            pool_kernel = self.pooling_params["kernel_size"]
+            pool_stride =  self.pooling_params["kernel_size"] if "stride" not in self.pooling_params else self.pooling_params["stride"]
+            pool_padding =  0 if "padding" not in self.pooling_params else self.pooling_params["padding"]
+            pool_dilation =  1 if "dilation" not in self.pooling_params else self.pooling_params["dilation"]
+
+            
+            for idx in range(len(self.channels)):
+                in_h = int(((in_h +2*conv_padding)-conv_dilation*(conv_kernel-1)-1)/conv_stride)+1
+                in_w = int(((in_w +2*conv_padding)-conv_dilation*(conv_kernel-1)-1)/conv_stride)+1
+                count_pool -= 1
+                if count_pool == 0:
+                    in_h = int(((in_h +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
+                    in_w = int(((in_w +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
+                    count_pool = self.pool_every
+            in_features = in_h * in_w * self.channels[-1] 
+            return in_features
             # ========================
         finally:
             torch.set_rng_state(rng_state)
@@ -107,7 +166,16 @@ class ConvClassifier(nn.Module):
         #  (FC -> ACT)*M -> Linear
         #  The last Linear layer should have an output dim of out_classes.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        input_dimension = n_features
+        for hidden in range(len(self.hidden_dims)):
+            layers.append(nn.Linear(input_dimension, self.hidden_dims[hidden]))
+            if self.activation_type == 'relu':
+                layers.append(ACTIVATIONS[str(self.activation_type)]())
+            elif self.activation_type == 'lrelu':
+                layers.append(ACTIVATIONS[str(self.activation_type)](negative_slope=self.activation_params["negative_slope"]))
+            input_dimension = self.hidden_dims[hidden]
+        layers.append(nn.Linear(input_dimension, self.out_classes))
+
         # ========================
 
         seq = nn.Sequential(*layers)
@@ -118,7 +186,9 @@ class ConvClassifier(nn.Module):
         #  Extract features from the input, run the classifier on them and
         #  return class scores.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        extracted_features = self.feature_extractor(x)
+        extracted_features = extracted_features.view(extracted_features.size(0), -1)
+        out = self.classifier(extracted_features)
         # ========================
         return out
 
@@ -276,6 +346,5 @@ class YourCodeNet(ConvClassifier):
     #  For example, add batchnorm, dropout, skip connections, change conv
     #  filter sizes etc.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
-
+        raise NotImplementedError()
     # ========================
