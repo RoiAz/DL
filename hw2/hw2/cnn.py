@@ -171,8 +171,11 @@ class ConvClassifier(nn.Module):
             layers.append(nn.Linear(input_dimension, self.hidden_dims[hidden]))
             if self.activation_type == 'relu':
                 layers.append(ACTIVATIONS[str(self.activation_type)]())
-            elif self.activation_type == 'lrelu':
-                layers.append(ACTIVATIONS[str(self.activation_type)](negative_slope=self.activation_params["negative_slope"]))
+            elif  self.activation_type == 'lrelu':
+                if self.activation_params:
+                    layers.append(ACTIVATIONS[str(self.activation_type)](negative_slope=self.activation_params["negative_slope"]))
+                else:
+                    layers.append(ACTIVATIONS[str(self.activation_type)]())
             input_dimension = self.hidden_dims[hidden]
         layers.append(nn.Linear(input_dimension, self.out_classes))
 
@@ -266,7 +269,10 @@ class ResidualBlock(nn.Module):
             if activation_type == 'relu': #4
                 main.append(ACTIVATIONS[str(activation_type)]())
             elif activation_type == 'lrelu':
-                main.append(ACTIVATIONS[str(activation_type)](negative_slope=activation_params["negative_slope"]))       
+                if activation_params:
+                    main.append(ACTIVATIONS[str(activation_type)](negative_slope=activation_params["negative_slope"]))
+                else:
+                    main.append(ACTIVATIONS[str(activation_type)]())
                 
         self.main_path = nn.Sequential(*main)
 
@@ -309,7 +315,20 @@ class ResidualBottleneckBlock(ResidualBlock):
         :param kwargs: Any additional arguments supported by ResidualBlock.
         """
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        b_channels = [inner_channels[0]] + inner_channels + [in_out_channels]
+        b_kernel_sizes = [1] + inner_kernel_sizes + [1]
+        batchnorm = False if "batchnorm" not in kwargs else kwargs["batchnorm"]
+        dropout = 0.0 if "dropout" not in kwargs else kwargs["dropout"]
+        activation_type = "relu" if "activation_type" not in kwargs else kwargs["activation_type"]
+        activation_params = {} if "activation_params" not in kwargs else kwargs["activation_params"]
+
+        super().__init__(in_channels=in_out_channels,
+        channels=b_channels,
+        kernel_sizes=b_kernel_sizes,
+        batchnorm=batchnorm,
+        dropout=dropout,
+        activation_type=activation_type,
+        activation_params=activation_params)
         # ========================
 
 
