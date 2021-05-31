@@ -78,12 +78,10 @@ class ConvClassifier(nn.Module):
         #  CONV->ACTs should exist at the end, without a POOL after them.
         # ====== YOUR CODE: ======
         self.pools_num = 0
-
-        filters_lst = [in_channels] + self.channels
-#         print(f'{in_channels=}') 
-#         print(f'{self.channels=}')
-#         print(f'{filters_lst=}')
+        self.features_num = 1
         
+        filters_lst = [in_channels] + self.channels
+ 
         # convolution parameters
         conv_kernel  = self.conv_params["kernel_size"]
         conv_stride =  1 if "stride" not in self.conv_params else self.conv_params["stride"]
@@ -91,7 +89,8 @@ class ConvClassifier(nn.Module):
         conv_dilation  = 1 if "dilation" not in self.conv_params else self.conv_params["dilation"]
         #pooling parameters
         pool_kernel = self.pooling_params["kernel_size"]
-        pool_stride =  None if "stride" not in self.pooling_params else self.pooling_params["stride"]
+        pool_stride =  self.pooling_params["kernel_size"] if "stride" not in self.pooling_params else self.pooling_params["stride"]
+
         pool_padding =  0 if "padding" not in self.pooling_params else self.pooling_params["padding"]
         pool_dilation =  1 if "dilation" not in self.pooling_params else self.pooling_params["dilation"]
 
@@ -101,6 +100,9 @@ class ConvClassifier(nn.Module):
             out_channels = filters_lst[idx] #32
             
             layers.append(nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=conv_kernel, stride=conv_stride, padding=conv_padding, dilation=conv_dilation))
+            #update features size after conv
+            in_h = int(((in_h +2*conv_padding)-conv_dilation*(conv_kernel-1)-1)/conv_stride)+1
+            in_w = int(((in_w +2*conv_padding)-conv_dilation*(conv_kernel-1)-1)/conv_stride)+1
 
             if self.activation_type == 'relu':
                 layers.append(ACTIVATIONS[str(self.activation_type)]())
@@ -113,7 +115,12 @@ class ConvClassifier(nn.Module):
                     layers.append(POOLINGS[str(self.pooling_type)](kernel_size=pool_kernel,stride=pool_stride,padding=pool_padding,dilation=pool_dilation))
                 elif self.pooling_type == 'avg':
                     layers.append(POOLINGS[str(self.pooling_type)](kernel_size=pool_kernel,stride=pool_stride,padding=pool_padding))
+                #update features size after pooling
+                in_h = int(((in_h +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
+                in_w = int(((in_w +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
                 self.pools_num += 1
+                
+        self.features_num = self.channels[-1]*in_h*in_w
         # ========================
         seq = nn.Sequential(*layers)
         return seq
@@ -127,31 +134,7 @@ class ConvClassifier(nn.Module):
         rng_state = torch.get_rng_state()
         try:
             # ====== YOUR CODE: ======
-            in_channels, in_h, in_w, = tuple(self.in_size)
-            count_pool = self.pool_every
-            
-            # convolution parameters
-            conv_kernel  = self.conv_params["kernel_size"]
-            conv_stride =  1 if "stride" not in self.conv_params else self.conv_params["stride"]
-            conv_padding =  0 if "padding" not in self.conv_params else self.conv_params["padding"]
-            conv_dilation  = 1 if "dilation" not in self.conv_params else self.conv_params["dilation"]
-            #pooling parameters
-            pool_kernel = self.pooling_params["kernel_size"]
-            pool_stride =  self.pooling_params["kernel_size"] if "stride" not in self.pooling_params else self.pooling_params["stride"]
-            pool_padding =  0 if "padding" not in self.pooling_params else self.pooling_params["padding"]
-            pool_dilation =  1 if "dilation" not in self.pooling_params else self.pooling_params["dilation"]
-
-            
-            for idx in range(len(self.channels)):
-                in_h = int(((in_h +2*conv_padding)-conv_dilation*(conv_kernel-1)-1)/conv_stride)+1
-                in_w = int(((in_w +2*conv_padding)-conv_dilation*(conv_kernel-1)-1)/conv_stride)+1
-                count_pool -= 1
-                if count_pool == 0:
-                    in_h = int(((in_h +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
-                    in_w = int(((in_w +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
-                    count_pool = self.pool_every
-            in_features = in_h * in_w * self.channels[-1] 
-            return in_features
+            return self.features_num
             # ========================
         finally:
             torch.set_rng_state(rng_state)
@@ -368,7 +351,43 @@ class ResNetClassifier(ConvClassifier):
         #    without a POOL after them.
         #  - Use your own ResidualBlock implementation.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.pools_num = 0
+        self.features_num = 1
+
+        in_channels, in_h, in_w, = tuple(self.in_size) 
+        #pooling parameters
+        pool_kernel = self.pooling_params["kernel_size"]
+        pool_stride =  self.pooling_params["kernel_size"] if "stride" not in self.pooling_params else self.pooling_params["stride"]
+        pool_padding =  0 if "padding" not in self.pooling_params else self.pooling_params["padding"]
+        pool_dilation =  1 if "dilation" not in self.pooling_params else self.pooling_params["dilation"]
+        
+        channels_length = len(self.channels)
+        remainder = channels_length % self.pool_every
+        curr_channels = in_channels
+        
+        for index in range(int(channels_length / self.pool_every)):
+            start_index = self.pool_every * index
+            end_index = self.pool_every * (index + 1)
+            
+            #ResidualBlock: [conv->drop->batch->act]*p
+            layers.append(ResidualBlock(in_channels= curr_channels, channels=self.channels[start_index : end_index], kernel_sizes=[3]*self.pool_every, batchnorm=self.batchnorm, dropout=self.dropout))
+            # no need to update the dimensions - ResidualBlock saves dimensions
+            
+            #pooling 
+            if self.pooling_type == 'max':
+                layers.append(POOLINGS[str(self.pooling_type)](kernel_size=pool_kernel,stride=pool_stride,padding=pool_padding,dilation=pool_dilation))
+            elif self.pooling_type == 'avg':
+                layers.append(POOLINGS[str(self.pooling_type)](kernel_size=pool_kernel,stride=pool_stride,padding=pool_padding))
+            
+            #update features size after pooling
+            in_h = int(((in_h +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
+            in_w = int(((in_w +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
+            self.pools_num += 1
+            
+            curr_channels = self.channels[end_index - 1]
+        if remainder != 0:
+            layers.append(ResidualBlock(in_channels= curr_channels, channels=self.channels[channels_length-remainder:], kernel_sizes=[3]*remainder, batchnorm=self.batchnorm, dropout=self.dropout))
+        self.features_num = self.channels[-1]*in_h*in_w
         # ========================
         seq = nn.Sequential(*layers)
         return seq
