@@ -77,7 +77,20 @@ def run_experiment(
     #   for you automatically.
     fit_res = None
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    pooling_params={"kernel_size":2}    
+    x, _ = ds_train[0]
+    num_of_labels = 10
+    
+    # building architecture: L layers with same K_l
+    layers = []
+    for layer in filters_per_layer:
+        layers.extend([layer]*layers_per_block)
+
+    loss_model = torch.nn.CrossEntropyLoss().to(device)
+    model = model_cls(in_size=x.shape, out_classes=num_of_labels, channels=layers, hidden_dims=hidden_dims, pool_every=pool_every, pooling_params=pooling_params, **kw).to(device)
+    opt_model = torch.optim.AdamW(model.parameters(), lr=lr,weight_decay=reg)
+    train_model = training.TorchTrainer(model, loss_model, opt_model, device)
+    fit_res = train_model.fit(dl_train=DataLoader(ds_train,batch_size=bs_train),dl_test=DataLoader(ds_test,batch_size=bs_test), early_stopping=early_stopping, num_epochs=epochs, max_batches=batches)
     # ========================
 
     save_experiment(run_name, out_dir, cfg, fit_res)
