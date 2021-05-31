@@ -147,10 +147,33 @@ An equation: $e^{i\pi} -1 = 0$
 part3_q2 = r"""
 **Your answer:**
 
-Explain the effect of depth on the accuracy. What depth produces the best results and why do you think that's the case?
 (1).
+In deeper networks we can be much more efficient in terms of computation and number of parameters. Deeper networks are able to create deep representations, at every layer, the network learns a new, more abstract representation of the input.
+With that said, increasing depth beyond a critical threshold might lead to a decrease in test accuracy.
 
-Were there values of L for which the network wasn't trainable? what causes this? Suggest two things which may be done to resolve it at least partially.
+Disclaimer - our answers reply on those specific tests over a particular train and test sets, results might be different and we believe they likely to be different over a larger train/test sets.
+
+In general our expectation were to get better results in deeper cnn for accuracy and loss on train set while we took into account the potential "over-fitting" on test set. In practice things were more complicated and different.
+
+L8 train and test accuracies were good enough but a closer look will suggest a potential "over-fitting" for the model, while the test accuracy graph is straggling and not consistent(V shapes). We can also notice a train loss that doesn't improving over time.
+
+L2 and L4 were depth tests with similar results and the best between all four. While both of them got high train and test accuracies, the loss of L2 was quit better in both the train and test sets. As we mentioned before it didn't match exactly with our expectation, the assumption was that L2 is probably too shallow leading to underfit where in practice L2 was able to train good enough and stay more generalized with good predication compare to L4 (again, the differences are small).
+We believe both L2 and L4 although "shallow" were able to extract necessary features and yet stay generalized enough leading to good predications and low loss.
+
+q2 - Were there values of L for which the network wasn't trainable? what causes this? Suggest two things which may be done to resolve it at least partially.
+(2).
+At first at L16 the network wasn't trainable, we got 0,0 dimension error, which occurred due to some dimensions shrinking until they reach 0.
+Two suggested option to solve that:
+The first and the action we took was to make sure beforehand that the network is not going to work with parameters that are too small in the beginning, where there will be a chance that they will decrease and will be considered to be 0.
+Another option is to make sure that for all of the parameters in the network, if they go below some threshold we will manually multiply them by a certain constant.
+
+Later L16 network wasn't trainable, reach poor results, without improving over time.
+We have an assumptions regrading the reason causing this result:
+The deeper the model, the more small changes may be amplified farther deeper.
+This process might cause a 'Covariate shift', which happens due to differences in the input (batch) distributions compare to training distribution, (without any change in the underlying mapping from inputs to outputs).
+We also suggest a potential solution:
+Using Batch Normalization would scale the outputs and is known to reduce internal covariate shift, while also help with granting faster learning rate.
+
 
 Write your answer using **markdown** and $\LaTeX$:
 ```python
@@ -163,6 +186,12 @@ An equation: $e^{i\pi} -1 = 0$
 
 part3_q3 = r"""
 **Your answer:**
+
+The bigger the value for K, the more local features we can learn to the model.
+This is also why we can notice an "over-fitting" around large K's, where the train accuracy is fitting realy fast really high and the results for the test accuracy are just the opposite. The same way for the train loss wich degrade with iteration, but on the test set it is rising up with iterations. In this mannar it is similar enough to results of expirement1.1
+
+
+than the optimal K values for L2 (which seems to be K32 by a large margin).
 
 
 Write your answer using **markdown** and $\LaTeX$:
