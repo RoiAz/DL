@@ -205,7 +205,8 @@ An equation: $e^{i\pi} -1 = 0$
 
 part3_q4 = r"""
 **Your answer:**
-
+The deeper the network, the more it is hard to train, we can notice pretty clearly the train accuracies L1,L2,L3,L4 from the best to worst (respectively). Same for the test accuracy.
+L1 seems to be slightly more capable of higher accuracy than L2
 
 Write your answer using **markdown** and $\LaTeX$:
 ```python
