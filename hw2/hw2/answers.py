@@ -135,12 +135,6 @@ The differences are:
 
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
 
 """
 
@@ -175,12 +169,6 @@ We also suggest a potential solution:
 Using Batch Normalization would scale the outputs and is known to reduce internal covariate shift, while also help with granting faster learning rate.
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
 
 """
 
@@ -194,39 +182,26 @@ This is also why we can notice an "over-fitting" around large K's, where the tra
 than the optimal K values for L2 (which seems to be K32 by a large margin).
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
 
 """
 
 part3_q4 = r"""
 **Your answer:**
-The deeper the network, the more it is hard to train, we can notice pretty clearly the train accuracies L1,L2,L3,L4 from the best to worst (respectively). Same for the test accuracy.
-L1 seems to be slightly more capable of higher accuracy than L2
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+The deeper the network, the more it is hard to train, we can notice pretty clearly the train accuracies L1,L2,L3,L4 from the best to worst (respectively). Same for the test accuracy. L1 seems to be slightly more capable of higher accuracy than L2
 
 """
 
 part3_q5 = r"""
 **Your answer:**
+we see that the L16_K32 and L32_K32 stopped to learn early and L8 continued and may overfitted the train set,
+due to we low loss on test for L16_K32 and L32_K32.
 
+in case of K64-128-256 tests we saw that we have lower loss in general probably 
+because the model extracted better the feature due to more conv layer.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+Compared to previous experiments we can see that in this section we got better accuracy and this is probably
+due to a deeper network with more convulsions.
+
 
 """
 
