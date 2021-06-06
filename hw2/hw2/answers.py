@@ -11,12 +11,12 @@ math (delimited with $$).
 part1_q1 = r"""
 **Your answer:**
 
-we have dZij/dXkm , i,k(0...127) j(0...2047), m(0...1023)
-the shape of  Jacobian will be 4D - (128,2048,128,1024)
+we have dZ_i,j/dX_k,m , i,k(0...127) j(0...2047), m(0...1023)
+the shape of  Jacobian will be 4D - (128,2048,128,1024) 
 
-for each Zij we have 128*1024 Xkm
-we have 128*2048 Zij
-so we will need 128*1024*128*2048*4b = 128Gb
+for each Z_i,j we have 128x1024 X_k,m 
+we have 128x2048 Z_i,j 
+so we will need 128x1024x128x2048x4b = 128Gb 
 
 """
 
@@ -67,18 +67,23 @@ part2_q1 = r"""
 section 1:
 yes, we can see that when we have dropout =0 we have overfit because we get low loss on train set and high loss on test set.
 On the other hand, when dropout !=0 we can see the opposite, the dropout here help to prevent overfit.
+For example looking at the accuracy of the train we can watch the blue line(droput=0) with the highest result(above the green and orange lines), where in the test results the blue line is at the bottom.
+
 
 section 2:
-High droput may cause undefit, in that case we will get lower accuracy than mid dropout. 
-Also, if we sace the only the relevant parameters, the memory that high dropout require is lower than low dropout because we have less parmaters to train.
+Dropout is a regularization approach intended to mitigate overfitting through simulating sparse activations from the network.
+Comparing the accuracy of train and test of green(dropout=0.8) and orange(dropout=0.4):Watching the accuracy of the train we get the green(dropout=0.8) with better results while watching at the accuracy of the test we get the orange(dropout=0.4) with highest results, we believe that is because the orange was able to extract more information out of the inputs, the dropout was too agressive in the case of the green.
+Comparing the loss of train and test of green(dropout=0.8) and orange(dropout=0.4): we can notice lower(better) loss for the green(dropout=0.8) in the train loss. While in the test loss we learn similar results for the green and orange dropouts, when the green dropout is more stable.
+The models' tendency to over-fit the data is evident by the significant performance-disparity between training and testing. In our case, over-fitting is likely caused by the network being shallow and wide (large number of parameters and few layers). 
+
 
 """
 
 part2_q2 = r"""
 **Your answer:**
-it's possible because the accuracy is according to number of right predications while in loss we sum the total "distance" so we can get more right predictions and it the same time to increase the "distances" of wrong predictions.
-```
-An equation: $e^{i\pi} -1 = 0$
+It's possible.
+The accuracy measures how many samples were correctly classified, while the loss measures how far were we, the distance, from the right predication.
+For example, we could make an improvement in terms of accuracy by getting more samples correctly, but at the same time increase our probability for a wrong predication on other samples in such a way that overall increased our loss function. Therefore, it is possible for the test loss to increase for a few epochs in conjunction with an increase in test accuracy.
 
 """
 # ==============
@@ -125,15 +130,10 @@ total = CONV1 + CONV2 ~ 1,179,648(h1*w1)
 The regular block uses above ~15times more floating point operations than the bottleneck block 
 
 (3). 
-Lets take for example the cifar10 dimensions as an input, where each pic has a 32X32 dimensions.
-In the regular block through the main path we will get an output of 28X28X256 where in the bottleneck block we will get 30X30X256
-In both cases we combine the input of 32X32X256
-
-The differences are:
-    (1) spatially (within feature maps) - 
-    (2) across feature maps - 
-
-
+In the regualr block(left block) our kernel will be with the 3x3x256 dimensions while in the bottleneck block(right clock) the kernel will be 1x1x256 dimensions.
+As showed in class, within feature maps means over the spatial extent. Across feature maps means across different channels.
+Therefore, in terms of the difference in ability to combine the input spatially(within feature maps) we can claim the regular blcok (left block) is more spatially involved while both of the blocks are combining the 256dim depth(of channels), there for are the same in the manner of across feature maps.
+We can also claim that the left block combines more of the input in every output result because of it's bigger kernel(depends on the meaning of "difference in ability to combine the input").
 
 
 """
@@ -154,54 +154,59 @@ L8 train and test accuracies were good enough but a closer look will suggest a p
 L2 and L4 were depth tests with similar results and the best between all four. While both of them got high train and test accuracies, the loss of L2 was quit better in both the train and test sets. As we mentioned before it didn't match exactly with our expectation, the assumption was that L2 is probably too shallow leading to underfit where in practice L2 was able to train good enough and stay more generalized with good predication compare to L4 (again, the differences are small).
 We believe both L2 and L4 although "shallow" were able to extract necessary features and yet stay generalized enough leading to good predications and low loss.
 
-q2 - Were there values of L for which the network wasn't trainable? what causes this? Suggest two things which may be done to resolve it at least partially.
 (2).
-At first at L16 the network wasn't trainable, we got 0,0 dimension error, which occurred due to some dimensions shrinking until they reach 0.
+At first at L16 the network wasn't trainable, we got 0,0 dimension error, which occurred due to some dimensions shrinking until they reach 0 (Pooling layers too often).
 Two suggested option to solve that:
 The first and the action we took was to make sure beforehand that the network is not going to work with parameters that are too small in the beginning, where there will be a chance that they will decrease and will be considered to be 0.
 Another option is to make sure that for all of the parameters in the network, if they go below some threshold we will manually multiply them by a certain constant.
 
 Later L16 network wasn't trainable, reach poor results, without improving over time.
 We have an assumptions regrading the reason causing this result:
+The reason might be due to the regularization process where the weights are too small close to zero and no learning process is acquired.
+A possible solution is to decrease the regularization coefficient.
+
 The deeper the model, the more small changes may be amplified farther deeper.
 This process might cause a 'Covariate shift', which happens due to differences in the input (batch) distributions compare to training distribution, (without any change in the underlying mapping from inputs to outputs).
 We also suggest a potential solution:
 Using Batch Normalization would scale the outputs and is known to reduce internal covariate shift, while also help with granting faster learning rate.
 
-
-
 """
 
 part3_q3 = r"""
 **Your answer:**
+Looking in the graphs at the test accuracies we can notice that the best results are coming from Ks 32 64. In the L2 depth we get the best result for K 32 and with the higher the depth is, the more K 64 is better. For L 4 the results are pretty similar for 32 and 64 features. For L 8 the K 64 is quit better than the K 32. We assume that the net can learn the features better in depth leading to improvement in test accuracy.
 
-The bigger the value for K, the more local features we can learn to the model.
-This is also why we can notice an "over-fitting" around large K's, where the train accuracy is fitting realy fast really high and the results for the test accuracy are just the opposite. The same way for the train loss wich degrade with iteration, but on the test set it is rising up with iterations. In this mannar it is similar enough to results of expirement1.1
+In the exp1.1 the graphs are built with same number of features and the comparison is between the different depths.
+In the exp1.2 the graphs are built with same depth and the comparison is between the different number of features.
+In both we ran over L 2 4 8 and K 32 64, the difference in this exp1.2 is the addition of K 128 256(with no L-16 depth).
 
-
-than the optimal K values for L2 (which seems to be K32 by a large margin).
-
+The bigger the value for K(the amount of features), the more local features we can learn to the model.
+This is also why we can notice an "over-fitting" around large K's, where the train accuracy is fitting realy fast really high and the results for the test accuracy are just the opposite(we can notice the orange and blue with the lowest test accuracies in most L-depths). The same way for the train loss wich degrade with iteration, but on the test set it is rising up with iterations. In this mannar it is similar enough to results of expirement1.1
 
 
 """
 
 part3_q4 = r"""
 **Your answer:**
-The deeper the network, the more it is hard to train, we can notice pretty clearly the train accuracies L1,L2,L3,L4 from the best to worst (respectively). Same for the test accuracy. L1 seems to be slightly more capable of higher accuracy than L2
+The deeper the network is, in respect to a const number of epochs, the lower the accuracies.
+L1,L2,L3,L4 from the best to worst(respectively).
+Same for the test accuracy. L1 seems to be slightly more capable of higher accuracy than L2.
+We can notice that adding more consecutive layers with the same amount of features results with lower test accuracies. We believe it is due to an over-fitting progress.
 
 """
 
 part3_q5 = r"""
 **Your answer:**
-we see that the L16_K32 and L32_K32 stopped to learn early and L8 continued and may overfitted the train set,
-due to we low loss on test for L16_K32 and L32_K32.
+Looking at the graphs for the fixed K32 with different depths, L 8 16 32
+We see that the L16_K32 and L32_K32 stopped to learn early while L8 continued (might cause overfitting to train set). L8 accuracy on the train set reached the highest number and the loss on train set was the ninimum between all depths. 
+For the test accuracy and loss L8 depth achieved bad results compare to other depths.
+The main difference in results compare to exp1.1 is that we see that no matter how deep the model was, it was still trainable!
+The skip connection does seem to solve the issue we've encountered in exp1.1, likely due to the sum of the shortcut path that joins the main path though a ReLU.
 
-in case of K64-128-256 tests we saw that we have lower loss in general probably 
-because the model extracted better the feature due to more conv layer.
 
-Compared to previous experiments we can see that in this section we got better accuracy and this is probably
-due to a deeper network with more convulsions.
-
+Looking at the graphs for the fixed K 64 128 256 with the different depths, L 2 4 8.
+The introduction of skip connections via Residual Networks produced results getting better with increasing depth, with more than 60% accuracy for the L8 depth network.
+Those results are just the opposite from the results from exp1.3 where we got lower results with increasing of net's depth. Probably because of the skip connection which helps to reduce over-fitting in deeper networks.
 
 """
 

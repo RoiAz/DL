@@ -402,6 +402,10 @@ class YourCodeNet(ConvClassifier):
 
         # TODO: Add any additional initialization as needed.
         # ====== YOUR CODE: ======
+        self.feature_extractor = self._make_feature_extractor()
+#         self.classifier = nn.Linear(self.features_num, self.out_classes)
+        self.classifier = self._make_classifier()
+        self.dropout = nn.Dropout(0.1)
         # ========================
 
     # TODO: Change whatever you want about the ConvClassifier to try to
@@ -414,64 +418,55 @@ class YourCodeNet(ConvClassifier):
         in_channels, in_h, in_w, = tuple(self.in_size) # 3,100,100
 
         layers = []
-        # TODO: Create the feature extractor part of the model:
-        #  [(CONV -> ACT)*P -> POOL]*(N/P)
-        #  Apply activation function after each conv, using the activation type and
-        #  parameters.
-        #  Apply pooling to reduce dimensions after every P convolutions, using the
-        #  pooling type and pooling parameters.
-        #  Note: If N is not divisible by P, then N mod P additional
-        #  CONV->ACTs should exist at the end, without a POOL after them.
-        # ====== YOUR CODE: ======
+
         self.pools_num = 0
         self.features_num = 1
-        
-        filters_lst = [in_channels] + self.channels
-        
-        # convolution parameters
-        conv_kernel  = 2
-        conv_stride =  1
-        conv_padding =  1
-        conv_dilation  = 1
-        #pooling parameters
+     
         pool_kernel = 2
-        pool_stride =  1
-        pool_padding = 1
+        pool_stride =  2
+        pool_padding = 0
         pool_dilation=1
-        tmp_in_channels = None
-        for idx in range(1, len(filters_lst)):
-            in_channels = filters_lst[idx-1] #3
-            out_channels = filters_lst[idx] #32
-            tmp_in_channels = idx
-            layers.append(nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=conv_kernel, stride=conv_stride, padding=conv_padding, dilation=conv_dilation))
-            #update features size after conv
-            in_h = int(((in_h +2*conv_padding)-conv_dilation*(conv_kernel-1)-1)/conv_stride)+1
-            in_w = int(((in_w +2*conv_padding)-conv_dilation*(conv_kernel-1)-1)/conv_stride)+1
-            
-            if random.randint(0,9) > 6:
-                layers.append(nn.Dropout2d(p=0.4))
 
-                
-            if random.randint(0,9) > 5:
-                layers.append(nn.ReLU())
-            else:
-                layers.append(nn.LeakyReLU(negative_slope=0.17))
+        in_channels, in_h, in_w, = tuple(self.in_size) 
+        
+        channels_length = len(self.channels)
+        remainder = channels_length % self.pool_every
+        curr_channels = in_channels
+        last = int(channels_length / self.pool_every)
+        for index in range(last):
+            start_index = self.pool_every * index
+            end_index = self.pool_every * (index + 1)
             
-            #performing pooling once in pool_every conv layers
-            if idx % self.pool_every == 0:
-                if random.randint(0,9) > 5:
-                    layers.append(nn.MaxPool2d(kernel_size=pool_kernel,stride=pool_stride, padding=pool_padding))
-                else:
-                    layers.append(nn.AvgPool2d(kernel_size=pool_kernel,stride=pool_stride, padding=pool_padding))
-                #update features size after pooling
-                in_h = int(((in_h +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
-                in_w = int(((in_w +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
-                self.pools_num += 1
+            # ResidualBlock saves dimensions: [conv->drop->batch->act]*p
+            layers.append(ResidualBlock(in_channels= curr_channels, channels=self.channels[start_index : end_index], kernel_sizes=[3]*self.pool_every, batchnorm="true", dropout=0.0))
+
+            #pooling
+            if (index == last-1):
+                layers.append(nn.MaxPool2d(kernel_size=pool_kernel, stride=pool_stride, padding=pool_padding, dilation=pool_dilation))
+                layers.append(nn.Dropout2d(p=0.1))
                 
+                self.pools_num += 1
+
+            #update features size after pooling
+            in_h = int(((in_h +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
+            in_w = int(((in_w +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
+            
+            curr_channels = self.channels[end_index - 1]
+        if remainder != 0:
+            layers.append(ResidualBlock(in_channels= curr_channels, channels=self.channels[channels_length-remainder:], kernel_sizes=[3]*remainder, batchnorm="true", dropout=0.0))
+        
+        #updating parameters
         self.features_num = self.channels[-1]*in_h*in_w
+        
         seq = nn.Sequential(*layers)
         return seq
     
+    def forward(self, x):
+        extracted_features = self.feature_extractor(x)
+        extracted_features = self.dropout(extracted_features)
+        extracted_features = extracted_features.view(extracted_features.size(0), -1)
+        extracted_features = self.classifier(extracted_features)
+        return extracted_features
 
 
     
