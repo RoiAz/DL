@@ -447,9 +447,9 @@ class YourCodeNet(ConvClassifier):
                 
                 self.pools_num += 1
 
-            #update features size after pooling
-            in_h = int(((in_h +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
-            in_w = int(((in_w +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
+                #update features size after pooling
+                in_h = int(((in_h +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
+                in_w = int(((in_w +2*pool_padding)-pool_dilation*(pool_kernel-1)-1)/pool_stride)+1
             
             curr_channels = self.channels[end_index - 1]
         if remainder != 0:
@@ -461,12 +461,6 @@ class YourCodeNet(ConvClassifier):
         seq = nn.Sequential(*layers)
         return seq
     
-    def forward(self, x):
-        extracted_features = self.feature_extractor(x)
-        extracted_features = self.dropout(extracted_features)
-        extracted_features = extracted_features.view(extracted_features.size(0), -1)
-        extracted_features = self.classifier(extracted_features)
-        return extracted_features
 
 
     

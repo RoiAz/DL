@@ -213,13 +213,20 @@ Those results are just the opposite from the results from exp1.3 where we got lo
 part3_q6 = r"""
 **Your answer:**
 
+q1 - Explain your modifications to the architecture which you implemented in the YourCodeNet class.
+(1). 
+Our architecture is using the introduction of skip connections via Residual Networks in order to handle the problem of vanishing gradients in a deep network.
+We used Batch Normalization followed by activation layer after every convolution inside the residual blocks, we didn't use dropouts inside the main path of every block(dropouts=0) but we did use MaxPool2d followed by a dropout layer towards the end of our network: this is meant to assist with trainability in higher depths, and help solve the issues we were seeing in the previous experiments(We tried several architectures until we finally came up with this one yielding the better results).
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+q2 - Analyze the results of experiment 2. Compare to experiment 1.
+(2).
+In overview our networks results are 20% higher than the best results achieved in expirements 1.
+
+Say that we look online for solutions to vanishing gradient problem and used residual blocks to help us. 
+Why we added Batch Normalization
+Why we moved the dropouts in the residual
+Write something about L3 getting best results (early-stopping)
+
 
 """
 # ==============
