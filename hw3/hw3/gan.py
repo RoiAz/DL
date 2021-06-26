@@ -5,6 +5,7 @@ from torch import Tensor
 from typing import Callable
 from torch.utils.data import DataLoader
 from torch.optim.optimizer import Optimizer
+from hw3.autoencoder import EncoderCNN, DecoderCNN
 
 
 class Discriminator(nn.Module):
@@ -20,8 +21,22 @@ class Discriminator(nn.Module):
         #  You can then use either an affine layer or another conv layer to
         #  flatten the features.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        modules = []
+        cin = in_size[0]
+        cout = in_size[1] * 2
+        #channel_list = [in_channels] + [128] + [256]  + [512] + [1024]
+
+        for ci in range(4):
+            modules.append(nn.Conv2d(in_channels=cin, out_channels=cout, kernel_size=5, stride=2, padding=2))
+            modules.append(nn.BatchNorm2d(cout))
+            modules.append(nn.LeakyReLU(negative_slope=0.05))
+            cin = cout
+            cout = cout *2
+        modules.append(nn.Sigmoid())
+        self.feature_extractor = nn.Sequential(*modules)
+        self.classifier = nn.Linear(4 * in_size[1] * in_size[2],1)
         # ========================
+    
 
     def forward(self, x):
         """
@@ -33,7 +48,8 @@ class Discriminator(nn.Module):
         #  No need to apply sigmoid to obtain probability - we'll combine it
         #  with the loss due to improved numerical stability.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        feats = self.feature_extractor.forward(x).view(x.shape[0], -1)
+        y = self.classifier(feats)
         # ========================
         return y
 
@@ -54,7 +70,24 @@ class Generator(nn.Module):
         #  section or implement something new.
         #  You can assume a fixed image size.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        modules = []
+        cin = 1024
+        cout = 1024 // 2
+        self.feat_size = featuremap_size
+
+        for ci in range(4):
+            modules.append(nn.ConvTranspose2d(in_channels=cin, out_channels=cout, kernel_size=5, stride=2, padding=2, output_padding=1))
+            modules.append(nn.BatchNorm2d(cout))
+            modules.append(nn.LeakyReLU(negative_slope=0.05))
+            cin = cout
+            if cin < (1024 // 4):
+                modules.append(nn.ConvTranspose2d(in_channels=cin, out_channels=out_channels, kernel_size=5, stride=2, padding=2, output_padding=1))
+                modules.append(nn.LeakyReLU(negative_slope=0.05))
+                break
+            cout = cout // 2
+             
+        self.reconstructor = nn.Sequential(*modules)
+        self.feats = nn.Linear(z_dim, 1024 * (featuremap_size **2))
         # ========================
 
     def sample(self, n, with_grad=False):
@@ -85,7 +118,8 @@ class Generator(nn.Module):
         #  Don't forget to make sure the output instances have the same
         #  dynamic range as the original (real) images.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        feats =  self.feats(z).reshape(-1, 1024, self.feat_size, self.feat_size)
+        x = self.reconstructor(feats)
         # ========================
         return x
 
