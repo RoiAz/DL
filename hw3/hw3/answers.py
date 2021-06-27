@@ -175,48 +175,55 @@ def part3_gan_hyperparams():
     )
     # TODO: Tweak the hyperparameters to train your GAN.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    hypers = dict(
+        batch_size=16, z_dim=32,
+        data_label=1, label_noise=0.27,
+        discriminator_optimizer=dict(
+            type='Adam',  # Any name in nn.optim like SGD, Adam
+            weight_decay=0.007,
+            lr=0.0002,
+            betas=(0.6, 0.7)
+            # You an add extra args for the optimizer here
+        ),
+        generator_optimizer=dict(
+            type='Adam',  # Any name in nn.optim like SGD, Adam
+            weight_decay=0.03,
+            lr=0.0003,
+            betas=(0.5, 0.999)
+            # You an add extra args for the optimizer here
+        ),
+    )
     # ========================
     return hypers
 
 
 part3_q1 = r"""
 **Your answer:**
+While training the GAN we train the discriminator and the generator, while doing that we give thee discriminator generated samples twice,
+one in the genrator training and one in the discriminator training.
 
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+The discriminator get the samples as input and they are not related to his modudle so we don't need to save gradients, 
+on the other hand in the genrator we want to maintain the samples gradients because the genrate process is part of model,
+meaning we want to the genrator to genrate better samples.
 
 """
 
 part3_q2 = r"""
 **Your answer:**
 
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+1. No, the generator parmeters affected also by the discriminator parameters (minmax) as we saw in the lecture.
+   In that case if the generator we stop train and the discriminator continue, the generator parameters could be bad for the model.
+   
+2. It mean that both genreator and the discriminator improving. Also, one can say that the two mean terms in the discriminator
+   gives constant (decreases toghether) while the mean term in the generator decreases also.
 """
 
 part3_q3 = r"""
 **Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+Seems like the GAN achived better results, thats probably because the loss function. 
+The main difference to our opnion is that the genrated GAN images are sharper than VAE generated images.
+In VAE we use simple L2 + regularization loss function while in GAN we used the discriminative as loss function 
+for every set of gamma parameters of the generator. Also, we had strong assumption on VAE model about gaussian probability.
 """
 
 # ==============

@@ -82,7 +82,8 @@ class Generator(nn.Module):
             cin = cout
             if cin < (1024 // 4):
                 modules.append(nn.ConvTranspose2d(in_channels=cin, out_channels=out_channels, kernel_size=5, stride=2, padding=2, output_padding=1))
-                modules.append(nn.LeakyReLU(negative_slope=0.05))
+                #modules.append(nn.LeakyReLU(negative_slope=0.05))
+                modules.append(nn.Tanh())
                 break
             cout = cout // 2
              
@@ -104,7 +105,8 @@ class Generator(nn.Module):
         #  Generate n latent space samples and return their reconstructions.
         #  Don't use a loop.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        with torch.set_grad_enabled(with_grad):
+            samples = self(torch.randn(n, self.z_dim, device=device))
         # ========================
         return samples
 
@@ -145,7 +147,18 @@ def discriminator_loss_fn(y_data, y_generated, data_label=0, label_noise=0.0):
     #  generated labels.
     #  See pytorch's BCEWithLogitsLoss for a numerically stable implementation.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    noise_half_range = label_noise /2
+   
+    #(r1 - r2) * torch.rand(a, b) + r2
+    noisy_label_data = (label_noise) * torch.rand_like(y_data, device=y_data.device) + data_label - noise_half_range
+   # noisy_label_data = torch.nn.init.normal_(y_data.clone(), mean=data_label, std=label_noise)
+    noisy_label_gen = (label_noise) * torch.rand_like(y_generated, device=y_generated.device) + 1 - data_label - noise_half_range
+    #noisy_label_gen = torch.nn.init.normal_(y_generated.clone(), mean=1-data_label, std=label_noise)
+    loss_func = nn.BCEWithLogitsLoss()
+    loss_data = loss_func(y_data, noisy_label_data)
+   # loss_data = -loss_data
+    loss_generated = loss_func(y_generated, noisy_label_gen)
+    #loss_generated = -loss_generated
     # ========================
     return loss_data + loss_generated
 
@@ -166,7 +179,9 @@ def generator_loss_fn(y_generated, data_label=0):
     #  Think about what you need to compare the input to, in order to
     #  formulate the loss in terms of Binary Cross Entropy.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    label = data_label + torch.zeros_like(y_generated)
+    loss_fn = nn.BCEWithLogitsLoss()
+    loss =loss_fn(y_generated, label)
     # ========================
     return loss
 
@@ -191,7 +206,13 @@ def train_batch(
     #  2. Calculate discriminator loss
     #  3. Update discriminator parameters
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    dsc_optimizer.zero_grad()
+    sampels = gen_model.sample(x_data.shape[0])
+    data_label = dsc_model(x_data)
+    gen_label = dsc_model(sampels.detach())
+    dsc_loss = dsc_loss_fn(data_label, gen_label)
+    dsc_loss.backward()
+    dsc_optimizer.step()
     # ========================
 
     # TODO: Generator update
@@ -199,7 +220,12 @@ def train_batch(
     #  2. Calculate generator loss
     #  3. Update generator parameters
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    gen_optimizer.zero_grad()
+    sampels = gen_model.sample(x_data.shape[0], with_grad=True)
+    gen_label = dsc_model(sampels)
+    gen_loss = gen_loss_fn(gen_label)
+    gen_loss.backward()
+    gen_optimizer.step()
     # ========================
 
     return dsc_loss.item(), gen_loss.item()
@@ -221,9 +247,16 @@ def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
     #  Save a checkpoint of the generator model. You can use torch.save().
     #  You should decide what logic to use for deciding when to save.
     #  If you save, set saved to True.
-    # ====== YOUR CODE: ======
-
-    raise NotImplementedError()
+    # ====== YOUR CODE: ====== 
+    from statistics import mean
+    early_stopping = False
+    if len(dsc_losses) > 3 and mean([dsc_losses[-2], dsc_losses[-3], dsc_losses[-3]]) > dsc_losses[-1] and \
+    len(gen_losses) > 3 and mean([gen_losses[-2], gen_losses[-3], gen_losses[-3]]) > gen_losses[-1]:
+        early_stopping = True
+    
+    if early_stopping:
+            torch.save(gen_model, checkpoint_file)
+            saved = True
     # ========================
 
     return saved
