@@ -90,10 +90,36 @@ class Trainer(abc.ABC):
             #  Train & evaluate for one epoch
             #  - Use the train/test_epoch methods.
             #  - Save losses and accuracies in the lists above.
-            #  - Implement early stopping. This is a very useful and
-            #    simple regularization technique that is highly recommended.
+                #  - Implement early stopping. This is a very useful and
+                #    simple regularization technique that is highly recommended.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            actual_num_epochs += 1
+            # Training modle
+            train_result = self.train_epoch(dl_train,verbose=verbose,**kw)
+            train_result_loss = torch.tensor(train_result.losses).mean()
+            train_result_accuracy =torch.tensor(train_result.accuracy).mean()
+            train_loss.append(train_result_loss.item())
+            train_acc.append(train_result_accuracy.item())
+            
+            # Test midle
+            test_result = self.test_epoch(dl_test,verbose=verbose,**kw)
+            test_result_loss =  torch.tensor(test_result.losses).mean()
+            test_result_accuracy = torch.tensor(test_result.accuracy).mean()
+            test_loss.append(test_result_loss.item())
+            test_acc.append(test_result_accuracy.item())
+            
+            # count when to break, and save model
+            if epoch==0 or test_result_accuracy > best_acc:
+                epochs_without_improvement=0
+                best_acc = test_result_accuracy
+                
+                if checkpoints is not None:
+                    save_checkpoint = True
+            else:
+                epochs_without_improvement += 1
+                if early_stopping is not None:
+                    if epochs_without_improvement >= early_stopping:
+                       break
             # ========================
 
             # Save model checkpoint if requested
@@ -221,14 +247,15 @@ class RNNTrainer(Trainer):
     def train_epoch(self, dl_train: DataLoader, **kw):
         # TODO: Implement modifications to the base method, if needed.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.hidden_state = None
         # ========================
         return super().train_epoch(dl_train, **kw)
 
     def test_epoch(self, dl_test: DataLoader, **kw):
         # TODO: Implement modifications to the base method, if needed.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        #supporting hidden state of the model between batches and epochs
+        self.hidden_state = None
         # ========================
         return super().test_epoch(dl_test, **kw)
 
@@ -246,7 +273,22 @@ class RNNTrainer(Trainer):
         #  - Update params
         #  - Calculate number of correct char predictions
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        
+        self.optimizer.zero_grad()
+        #forward
+        y_predict, hidden = self.model(x, hidden_state=self.hidden_state)
+        self.hidden_state = hidden
+        y_predict = torch.transpose(y_predict, 1, -1)
+        #sequence los
+        loss = self.loss_fn(y_predict, y)
+        loss.backward() # backwards
+        #update
+        self.optimizer.step()
+        self.hidden_state = hidden.detach()
+#         self.hidden_state.requires_grad = False        
+        #accuracy
+        y_ceil = torch.argmax(y_predict, dim=1)
+        num_correct = torch.sum(y == y_ceil)
         # ========================
 
         # Note: scaling num_correct by seq_len because each sample has seq_len
@@ -266,7 +308,19 @@ class RNNTrainer(Trainer):
             #  - Loss calculation
             #  - Calculate number of correct predictions
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            # Forward pass
+            pred_scores, h = self.model(x, hidden_state=self.hidden_state)
+            self.hidden_state = h
+            scores = torch.transpose(pred_scores, 1, 2)
+            
+            # Calculate total loss over sequence
+            loss = self.loss_fn(scores, y)
+            
+            #  Backward pass: truncated back-propagation through time
+            y_pred = torch.argmax(scores, dim=1)
+            
+            # Calculate number of correct char predictions
+            num_correct = torch.sum(torch.eq(y, y_pred))
             # ========================
 
         return BatchResult(loss.item(), num_correct.item() / seq_len)
@@ -278,11 +332,7 @@ class VAETrainer(Trainer):
         x = x.to(self.device)  # Image batch (N,C,H,W)
         # TODO: Train a VAE on one batch.
         # ====== YOUR CODE: ======
-        self.optimizer.zero_grad()
-        x_rec, mu, log_sigma2 = self.model.forward(x)
-        loss, data_loss, kldiv_loss = self.loss_fn(x, x_rec, mu, log_sigma2)
-        loss.backward()
-        self.optimizer.step()
+        raise NotImplementedError()
         # ========================
 
         return BatchResult(loss.item(), 1 / data_loss.item())
@@ -294,8 +344,7 @@ class VAETrainer(Trainer):
         with torch.no_grad():
             # TODO: Evaluate a VAE on one batch.
             # ====== YOUR CODE: ======
-            x_rec, mu, log_sigma2 = self.model.forward(x)
-            loss, data_loss, kldiv_loss = self.loss_fn(x, x_rec, mu, log_sigma2)
+            raise NotImplementedError()
             # ========================
 
         return BatchResult(loss.item(), 1 / data_loss.item())
