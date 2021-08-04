@@ -28,13 +28,22 @@ class PolicyNet(nn.Module):
 
         # TODO: Implement a simple neural net to approximate the policy.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        layers = []
+        in_feat_num = in_features
+        for out_feat_num in [32, 64, 128, 256, 1024]:
+            layers.append(nn.Linear(in_feat_num, out_feat_num))
+            layers.append(nn.ReLU())
+            in_feat_num = out_feat_num
+            
+        layers.append(nn.Linear(in_feat_num, out_actions))
+        self.net = nn.Sequential(*layers)
+        self.net.to(kw.get('device', 'cpu')) #check if we get gpu if not run it on cpu
         # ========================
 
     def forward(self, x):
         # TODO: Implement a simple neural net to approximate the policy.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        action_scores = self.net(x)
         # ========================
         return action_scores
 
@@ -49,7 +58,7 @@ class PolicyNet(nn.Module):
         """
         # TODO: Implement according to docstring.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        net = PolicyNet(env.observation_space.shape[0], env.action_space.n, **kw)
         # ========================
         return net.to(device)
 
@@ -87,7 +96,11 @@ class PolicyAgent(object):
         #  Generate the distribution as described above.
         #  Notice that you should use p_net for *inference* only.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        with torch.no_grad():
+            curr = self.curr_state.view(1, -1)
+            net_out = self.p_net(curr)
+            probs = torch.softmax(net_out, dim=-1)
+            actions_proba = probs.view(-1)
         # ========================
 
         return actions_proba
@@ -108,9 +121,11 @@ class PolicyAgent(object):
         #  - Update agent state.
         #  - Generate and return a new experience.
         # ====== YOUR CODE: ======
-
-        raise NotImplementedError()
-
+        act = torch.multinomial(self.current_action_distribution(), 1).item()
+        observation, reward, is_done, _ = self.env.step(act)
+        experience = Experience(self.curr_state, act, reward, is_done)
+        self.curr_state = torch.from_numpy(observation)
+        self.curr_episode_reward += reward
         # ========================
         if is_done:
             self.reset()
@@ -136,7 +151,14 @@ class PolicyAgent(object):
             #  Create an agent and play the environment for one episode
             #  based on the policy encoded in p_net.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            agent = cls(env=env, p_net=p_net, device=device)
+            env.reset()
+            while True:
+                exp = agent.step()
+                reward += exp.reward
+                n_steps += 1
+                if exp.is_done:
+                    break
             # ========================
         return env, n_steps, reward
 
