@@ -225,7 +225,9 @@ class BaselinePolicyGradientLoss(VanillaPolicyGradientLoss):
         #  Calculate the loss and baseline.
         #  Use the helper methods in this class as before.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        policy_weight, baseline = self._policy_weight(batch)
+        vanq = policy_weight - baseline
+        loss_p = self._policy_loss(batch, action_scores, vanq)
         # ========================
         return loss_p, dict(loss_p=loss_p.item(), baseline=baseline.item())
 
@@ -234,7 +236,8 @@ class BaselinePolicyGradientLoss(VanillaPolicyGradientLoss):
         #  Calculate both the policy weight term and the baseline value for
         #  the PG loss with baseline.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        policy_weight = batch.q_vals
+        baseline = torch.mean(batch.q_vals)
         # ========================
         return policy_weight, baseline
 
@@ -258,7 +261,7 @@ class ActionEntropyLoss(nn.Module):
         max_entropy = None
         # TODO: Compute max_entropy.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        max_entropy = -np.log(1 / n_actions)
         # ========================
         return max_entropy
 
