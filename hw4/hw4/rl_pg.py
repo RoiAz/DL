@@ -30,7 +30,8 @@ class PolicyNet(nn.Module):
         # ====== YOUR CODE: ======
         layers = []
         in_feat_num = in_features
-        for out_feat_num in [32, 64, 128, 256, 1024]:
+       # for out_feat_num in [32, 64, 128, 256, 1024]:
+        for out_feat_num in [32, 64, 128, 256]:
             layers.append(nn.Linear(in_feat_num, out_feat_num))
             layers.append(nn.ReLU())
             in_feat_num = out_feat_num
@@ -261,7 +262,7 @@ class ActionEntropyLoss(nn.Module):
         max_entropy = None
         # TODO: Compute max_entropy.
         # ====== YOUR CODE: ======
-        max_entropy = -np.log(1 / n_actions)
+        max_entropy = np.log(n_actions)
         # ========================
         return max_entropy
 
@@ -287,7 +288,9 @@ class ActionEntropyLoss(nn.Module):
         #   - Use pytorch built-in softmax and log_softmax.
         #   - Calculate loss per experience and average over all of them.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        ent = torch.softmax(action_scores, dim=1) * torch.log_softmax(action_scores, dim=1)
+        norm_sum = -(torch.sum(ent, dim=1) / self.max_entropy)
+        loss_e = -torch.mean(norm_sum) # averge, SGD need to maximize
         # ========================
 
         loss_e *= self.beta
@@ -434,7 +437,16 @@ class PolicyTrainer(object):
         #   - Backprop.
         #   - Update model parameters.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.optimizer.zero_grad()
+        scores = self.model.forward(batch.states)
+        total_loss = 0
+        for loss_fn in self.loss_functions:
+            ls, ls_dict = loss_fn(batch, scores)
+            ls.backward(retain_graph=True)
+            losses_dict.update(ls_dict)
+            total_loss += ls
+            
+        self.optimizer.step()
         # ========================
 
         return total_loss, losses_dict

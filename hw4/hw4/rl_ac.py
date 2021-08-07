@@ -19,7 +19,28 @@ class AACPolicyNet(nn.Module):
         #  Implement a dual-head neural net to approximate both the
         #  policy and value. You can have a common base part, or not.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        #qfunc/policy
+        qlayers = []
+        in_feat_num = in_features
+        for out_feat_num in [64, 128, 256, 128, 64]:
+            qlayers.append(nn.Linear(in_feat_num, out_feat_num))
+            qlayers.append(nn.ReLU())
+            in_feat_num = out_feat_num
+        qlayers.append(nn.Linear(in_feat_num, out_actions))
+        self.qnet = nn.Sequential(*qlayers)
+        self.qnet.to(kw.get('device', 'cpu')) #check if we get gpu if not run it on cpu
+
+
+        #vfunc
+        vlayers = []
+        in_feat_num = in_features
+        for out_feat_num in [64, 128, 256, 128, 64]:
+            vlayers.append(nn.Linear(in_feat_num, out_feat_num))
+            vlayers.append(nn.ReLU())
+            in_feat_num = out_feat_num
+        vlayers.append(nn.Linear(in_feat_num, 1))
+        self.vnet = nn.Sequential(*vlayers)
+        self.vnet.to(kw.get('device', 'cpu')) #check if we get gpu if not run it on cpu
         # ========================
 
     def forward(self, x):
@@ -34,7 +55,8 @@ class AACPolicyNet(nn.Module):
         #  calculate both the action scores (policy) and the value of the
         #  given state.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        action_scores = self.qnet(x)
+        state_values = self.vnet(x)
         # ========================
 
         return action_scores, state_values
@@ -49,7 +71,7 @@ class AACPolicyNet(nn.Module):
         """
         # TODO: Implement according to docstring.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        net = AACPolicyNet(env.observation_space.shape[0], env.action_space.n, **kw)
         # ========================
         return net.to(device)
 
@@ -58,7 +80,13 @@ class AACPolicyAgent(PolicyAgent):
     def current_action_distribution(self) -> torch.Tensor:
         # TODO: Generate the distribution as described above.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        with torch.no_grad():
+            curr = self.curr_state.view(1, -1)
+            act_scores, _ = self.p_net.forward(curr)
+           # print('#'*10)
+            #print(net_out)
+            probs = torch.softmax(act_scores, dim=-1)
+            actions_proba = probs.view(-1)
         # ========================
         return actions_proba
 
@@ -81,7 +109,9 @@ class AACPolicyGradientLoss(VanillaPolicyGradientLoss):
         #  advantage vector per state.
         #  Use the helper functions in this class and its base.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        loss_v = self._value_loss(batch, state_values)
+        advantage = self._policy_weight(batch, state_values)
+        loss_p = self._policy_loss(batch, action_scores, advantage)
         # ========================
 
         loss_v *= self.delta
@@ -101,13 +131,17 @@ class AACPolicyGradientLoss(VanillaPolicyGradientLoss):
         #  Notice that we don't want to backprop errors from the policy
         #  loss into the state-value network.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        with torch.no_grad():
+            advantage = batch.q_vals - state_values.detach()
         # ========================
         return advantage
 
     def _value_loss(self, batch: TrainBatch, state_values: torch.Tensor):
         # TODO: Calculate the state-value loss.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        val = state_values.view(-1)
+        qval = batch.q_vals.view(-1)
+        mse = nn.MSELoss(reduction='mean')
+        loss_v = mse(qval, val)
         # ========================
         return loss_v
