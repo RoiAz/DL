@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from typing import Callable
 from torch.utils.data import DataLoader
 from torch.optim.optimizer import Optimizer
-import project.v_gan as gan_vanila
+import project.vanilla_gan as gan_vanila
 
 class Discriminator(gan_vanila.Discriminator):
     def __init__(self, in_size):
@@ -135,4 +135,5 @@ def train_batch(
     return dsc_loss.item(), gen_loss.item()
 
 def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
+    print("w_save")
     return gan_vanila.save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file)

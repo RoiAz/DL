@@ -8,7 +8,7 @@ import tqdm
 import IPython.display
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
-import project.v_gan as v_gan
+import project.vanilla_gan as v_gan
 
 # copyed from HW3
 
@@ -23,7 +23,8 @@ def Optimizer_func(model_params, opt_params):
 ## the traing
 def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):  
     print(hp)
-    num_epochs = 100
+#     num_epochs = 100
+    num_epochs = 10
     
     # load params
     batch_size = hp['batch_size']
@@ -39,7 +40,7 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
     print("run model on device: ",device)
     dsc = v_gan.Discriminator(data[0][0].shape).to(device)
     gen = v_gan.Generator(z_dim, featuremap_size=4).to(device)
-
+    
     # set optimizer function
     dsc_optimizer = Optimizer_func(dsc.parameters(), hp['discriminator_optimizer'])
     gen_optimizer = Optimizer_func(gen.parameters(), hp['generator_optimizer'])
@@ -94,11 +95,16 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
             dsc_avg.append(np.mean(dsc_losses))
             gen_avg.append(np.mean(gen_losses))
             
+            print("444")
             # do checkpoint
             if v_gan.save_checkpoint(gen, dsc_avg, gen_avg, checkpoint_file):
+                print("333")
                 print(f'Saved checkpoint - {epoch + 1}/{num_epochs}')
 
             samples = gen.sample(5, with_grad=False)
             
     except KeyboardInterrupt as e:
         print('\n *** Training interrupted by user')
+    except:
+        print("Something else went wrong")
+

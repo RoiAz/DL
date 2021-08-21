@@ -22,6 +22,7 @@ reset = False
 
 def train_model(device, ds_gwb, modelCodeModule, checkpoint_file_suffix : str, hyperparams:dict):
     print(hyperparams)
+    print(modelCodeModule)
     imageDir = os.path.join('project_imgs', checkpoint_file_suffix)
     # create dir
     if not os.path.exists(imageDir):
@@ -36,8 +37,11 @@ def train_model(device, ds_gwb, modelCodeModule, checkpoint_file_suffix : str, h
         checkpoint_file = 'checkpoints/'+checkpoint_file_suffix
         if not os.path.isfile(f'{checkpoint_file}.pt'):
             train_gan(modelCodeModule, hyperparams, ds_gwb, device, checkpoint_file_suffix)
+            print("111")
         if os.path.isfile(f'{checkpoint_file}.pt'):
-            gen = torch.load(f'{checkpoint_file}.pt', map_location=device)        
+            print("222")
+            gen = torch.load(f'{checkpoint_file}.pt', map_location=device)
+            print(gen)
         samples = gen.sample(n=10, with_grad=False).cpu()
         torch.save(samples,imageSrc)
     
