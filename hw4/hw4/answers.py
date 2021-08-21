@@ -38,9 +38,9 @@ def part1_aac_hyperparams():
     hp = dict(batch_size=32,
               gamma=0.99,
               beta=0.99,
-              delta=0.25,
-              learn_rate=1.2 * 1e-3,
-              eps=1e-8, num_workers=2)
+              delta=0.9,
+              learn_rate=1e-3,
+              eps=1e-8, num_workers=1)
 
     # ========================
     return hp
@@ -52,7 +52,7 @@ The reason there is a high variance is the scale of rewards, for example for "ba
 in which case we have increased the value function anyway.
 Intuitively we want to define actions that are above average as good actions and increase their probabilty and similarly for bad actions.
 For such cases we use baseline subtraction causing to be dependent only on the current state - lower variance.
-lets say we have actions a1, a2 with prob p1=0.7, p2=0.3 and values (1000, 1001), in this case we will get Var= 
+
 """
 
 
