@@ -231,36 +231,6 @@ def train_batch(
     return dsc_loss.item(), gen_loss.item()
 
 
-# def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
-#     """
-#     Saves a checkpoint of the generator, if necessary.
-#     :param gen_model: The Generator model to save.
-#     :param dsc_losses: Avg. discriminator loss per epoch.
-#     :param gen_losses: Avg. generator loss per epoch.
-#     :param checkpoint_file: Path without extension to save generator to.
-#     """
-
-#     saved = False
-#     checkpoint_file = f"{checkpoint_file}.pt"
-
-#     # TODO:
-#     #  Save a checkpoint of the generator model. You can use torch.save().
-#     #  You should decide what logic to use for deciding when to save.
-#     #  If you save, set saved to True.
-#     # ====== YOUR CODE: ====== 
-#     from statistics import mean
-#     early_stopping = False
-#     if len(dsc_losses) > 3 and mean([dsc_losses[-2], dsc_losses[-3], dsc_losses[-3]]) > dsc_losses[-1] and \
-#     len(gen_losses) > 3 and mean([gen_losses[-2], gen_losses[-3], gen_losses[-3]]) > gen_losses[-1]:
-#         early_stopping = True
-    
-#     if early_stopping:
-#             torch.save(gen_model, checkpoint_file)
-#             saved = True
-#     # ========================
-
-#     return saved
-
 def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
     """
     Saves a checkpoint of the generator, if necessary.
@@ -277,17 +247,53 @@ def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
     #  Save a checkpoint of the generator model. You can use torch.save().
     #  You should decide what logic to use for deciding when to save.
     #  If you save, set saved to True.
-    # ====== YOUR CODE: ======
-    if checkpoint_file is None:
-        print("check1")
-        return saved
+    # ====== YOUR CODE: ====== 
+    from statistics import mean
+    early_stopping = False
+    if len(dsc_losses) > 3 and mean([dsc_losses[-2], dsc_losses[-3], dsc_losses[-3]]) > dsc_losses[-1] and \
+    len(gen_losses) > 3 and mean([gen_losses[-2], gen_losses[-3], gen_losses[-3]]) > gen_losses[-1]:
+        early_stopping = True
     
-    if len(gen_losses) > 2 and  dsc_losses[-1] > dsc_losses[-2] and dsc_losses[-1] > dsc_losses[-2]:
-        print("check2")
-        torch.save(gen_model, checkpoint_file)
-        saved=True
-        
-    print("check3")
+#     if early_stopping:
+    torch.save(gen_model, checkpoint_file)
+    saved = True
     # ========================
 
     return saved
+
+
+
+# def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
+#     """
+#     Saves a checkpoint of the generator, if necessary.
+#     :param gen_model: The Generator model to save.
+#     :param dsc_losses: Avg. discriminator loss per epoch.
+#     :param gen_losses: Avg. generator loss per epoch.
+#     :param checkpoint_file: Path without extension to save generator to.
+#     """
+
+#     saved = False
+#     checkpoint_file = f"{checkpoint_file}.pt"
+
+#     # TODO:
+#     #  Save a checkpoint of the generator model. You can use torch.save().
+#     #  You should decide what logic to use for deciding when to save.
+#     #  If you save, set saved to True.
+#     # ====== YOUR CODE: ======
+#     if checkpoint_file is None:
+#         print("check1")
+#         return saved
+#     if not len(gen_losses) > 2
+#         print("gen_losses")
+#     if not dsc_losses[-1] > dsc_losses[-2]
+#         print("dsc_losses")
+
+#     if len(gen_losses) > 2 and  dsc_losses[-1] > dsc_losses[-2] and dsc_losses[-1] > dsc_losses[-2]:
+#         print("check2")
+#         torch.save(gen_model, checkpoint_file)
+#         saved=True
+        
+#     print("check3")
+#     # ========================
+
+#     return saved

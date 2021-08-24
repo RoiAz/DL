@@ -4,9 +4,9 @@ import torch.nn.functional as F
 from typing import Callable
 from torch.utils.data import DataLoader
 from torch.optim.optimizer import Optimizer
-import project.v_gan as gan_vanila
-import project.w_gan as w_gan
-import project.sn_gan as sn_gan
+import project.vanilla_gan as gan_vanila
+import project.wass_gan as w_gan
+import project.spectral_norm_gan as sn_gan
 
 """ we jsut going 2 use the same class we already rwite"""
 class Discriminator(sn_gan.Discriminator):
