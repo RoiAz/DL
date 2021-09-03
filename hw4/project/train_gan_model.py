@@ -252,7 +252,7 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
 
     # try except, if the model stop learning in the middle
     try:
-        dsc_avg, gen_avg = [], []
+        dsc_avg, gen_avg, inception_lst = [], [], []
         for epoch in range(num_epochs):
             # print batch losses
             dsc_losses, gen_losses = [], []
@@ -280,14 +280,58 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
             dsc_avg.append(np.mean(dsc_losses))
             gen_avg.append(np.mean(gen_losses))
             
+            # inception list maintainance
+            samples = gen.sample(530, with_grad=False)
+            np_inception_score, _ = inception_score(samples,cuda=True,batch_size=64, resize=True)
+            
+            # debbug
+            print(f'inception shape: {np_inception_score.shape}')
+            print(f'inception type: {type(np_inception_score)}')
+            
+            int_inception_score = np_inception_score.tolist()
+            inception_lst.append(int_inception_score)
+            
+            
             print("444")
             # do checkpoint
             if v_gan.save_checkpoint(gen, dsc_avg, gen_avg, checkpoint_file):
                 print("333")
                 print(f'Saved checkpoint - {epoch + 1}/{num_epochs}')
 
-            samples = gen.sample(5, with_grad=False)
-            
+#             samples = gen.sample(5, with_grad=False)
+        
+        # saves inception results for graph creation
+        name = "inception_%s" % gan_type_for_checkpoint_file
+        filename = "%s.txt" % name
+        path = "project/outputs_for_graphs/"
+        file = open(path + filename, "w") 
+        inception_listToStr = ' '.join([str(elem) for elem in inception_lst])
+#         inception_listToStr = ''.join([str(elem)+"\n" for elem in inception_lst])
+        file.write(''.join(inception_listToStr)) 
+        file.close()
+        
+        # saves discriminator avg loss results for graph creation
+        name = "discriminator_%s" % gan_type_for_checkpoint_file
+        filename = "%s.txt" % name
+        path = "project/outputs_for_graphs/"
+        file = open(path + filename, "w") 
+        dis_listToStr = ' '.join([str(elem) for elem in dsc_avg])
+#         dis_listToStr = ''.join([str(elem)+"\n" for elem in dsc_avg])
+        file.write(''.join(dis_listToStr)) 
+        file.close()
+        
+        # saves generator avg loss results for graph creation
+        name = "generator_%s" % gan_type_for_checkpoint_file
+        filename = "%s.txt" % name
+        path = "project/outputs_for_graphs/"
+        file = open(path + filename, "w") 
+        gen_listToStr = ' '.join([str(elem) for elem in gen_avg])
+#         gen_listToStr = ''.join([str(elem)+"\n" for elem in gen_avg])
+        file.write(''.join(gen_listToStr))
+        file.close()
+        
+        
+    
     except KeyboardInterrupt as e:
         print('\n *** Training interrupted by user')
 #     except:
