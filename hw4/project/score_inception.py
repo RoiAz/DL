@@ -1,3 +1,5 @@
+# based on https://github.com/sbarratt/inception-score-pytorch/blob/master/inception_score.py
+
 import torch
 from torch import nn
 from torch.autograd import Variable
@@ -9,7 +11,7 @@ from torchvision.models.inception import inception_v3
 import numpy as np
 from scipy.stats import entropy
 
-def inception_score(imgs, cuda=True, batch_size=32, resize=False, splits=1):
+def inception_score(dataloader, cuda=True, batch_size=32, resize=False, splits=1):
     """Computes the inception score of the generated images imgs
 
     imgs -- Torch dataset of (3xHxW) numpy images normalized in the range [-1, 1]
@@ -17,7 +19,7 @@ def inception_score(imgs, cuda=True, batch_size=32, resize=False, splits=1):
     batch_size -- batch size for feeding into Inception v3
     splits -- number of splits
     """
-    N = len(imgs)
+    N = len(dataloader)
 
     assert batch_size > 0
     assert N > batch_size
@@ -30,8 +32,9 @@ def inception_score(imgs, cuda=True, batch_size=32, resize=False, splits=1):
             print("WARNING: You have a CUDA device, so you should probably set cuda=True")
         dtype = torch.FloatTensor
 
+    print(dtype)
     # Set up dataloader
-    dataloader = torch.utils.data.DataLoader(imgs, batch_size=batch_size)
+#     dataloader = torch.utils.data.DataLoader(dataloader, batch_size=batch_size)
 
     # Load inception model
     inception_model = inception_v3(pretrained=True, transform_input=False).type(dtype)
@@ -47,6 +50,7 @@ def inception_score(imgs, cuda=True, batch_size=32, resize=False, splits=1):
     preds = np.zeros((N, 1000))
 
     for i, batch in enumerate(dataloader, 0):
+        print(f'batch: {batch}')
         batch = batch.type(dtype)
         batchv = Variable(batch)
         batch_size_i = batch.size()[0]

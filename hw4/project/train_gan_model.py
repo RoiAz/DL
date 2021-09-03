@@ -17,7 +17,7 @@ import cs236781.download
 import tqdm
 from torch.utils.data import DataLoader
 import torch.optim as optim
-
+from .score_inception import inception_score
 # Based HW3
 reset = False
 
@@ -159,12 +159,20 @@ def train_gan_model(device, ds_gwb, modelCodeModule, checkpoint_file_suffix : st
             print("train_model_222")
             gen = torch.load(f'{checkpoint_file}.pt', map_location=device)
             print(gen)
-        samples = gen.sample(n=10, with_grad=False).cpu()
+        samples = gen.sample(n=1024, with_grad=False).cpu()
         torch.save(samples,imageSrc)
+        
+
     
     # plot images
     print('*** Images Generated from model of the {}:'.format(checkpoint_file_suffix))
     fig, _ = plot.tensors_as_images(samples, nrows=1, figsize=(20,20))
+    
+    # inception_score
+    print(f'The size of samples:{samples}')
+    mean , scores = inception_score(samples, cuda=True, batch_size=32, resize=True, splits=1)
+    print(f'Inception score of {checkpoint_file_suffix}: scores are: {scores} and mean score is: {mean}.')
+    
     #fig.savefig(imageSrc)
     
     return gen
@@ -189,8 +197,13 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
     torch.manual_seed(20)
 
     # get data
-    dl_train = DataLoader(data, batch_size, shuffle=True)
+#     dl_train = DataLoader(data, batch_size, shuffle=True)
+    dl_train = torch.utils.data.DataLoader(data, batch_size=batch_size)
 
+#     inception score
+#     mean , scores = inception_score(dl_train, cuda=True, batch_size=32, resize=False, splits=1)
+#     print(f'$$$$$$$$$$$$$$$ scores are {scores} and mean score is{mean}.')
+    
     # add model to device
     print("run model on device: ",device)
     dsc = v_gan.Discriminator(data[0][0].shape).to(device)
