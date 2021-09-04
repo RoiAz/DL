@@ -90,24 +90,46 @@ def train_batch(
     x_data: DataLoader,
 ):
 
-    def wass_gan_hyperparams():
-        hypers = dict(
+#     def wass_gan_hyperparams():
 
-            data_label=1,
-            label_noise=0.0002,
+#         hypers = dict(
+
+#             data_label=1,
+#             label_noise=0.0002,
+#             batch_size=32,
+#             z_dim=128,
+            
+#             discriminator_optimizer=dict(
+#                 lr=0.000035 ,
+#                 type='RMSprop',
+#             ),
+#             generator_optimizer=dict(
+#                 type='RMSprop',
+#                 lr=0.0001 ,
+#             ),
+#             N = 5 
+#         )
+#         return hypers
+    
+    def wass_gan_hyperparams():   
+    
+        hypers = dict(
+        
             batch_size=32,
             z_dim=128,
-            
+            data_label=1,
+            label_noise=0.2,
             discriminator_optimizer=dict(
-                lr=0.000035 ,
-                type='RMSprop',
+                type="SGD",
+                lr=0.0075 ,
             ),
             generator_optimizer=dict(
-                type='RMSprop',
-                lr=0.0001 ,
+                type="Adam",
+                lr= 0.001,
+                betas =(0.5, 0.999),
             ),
-            N = 5 
-        )
+            N = 5
+        )  
         return hypers
 
     num = wass_gan_hyperparams()['N']

@@ -95,9 +95,9 @@ def train_gan_model(device, ds_gwb, modelCodeModule, checkpoint_file_suffix : st
         checkpoint_file = 'checkpoints/'+checkpoint_file_suffix
         if not os.path.isfile(f'{checkpoint_file}.pt'):
             train_gan(modelCodeModule, hyperparams, ds_gwb, device, checkpoint_file_suffix)
-            print("train_model_111")
+#             print("train_model_111")
         if os.path.isfile(f'{checkpoint_file}.pt'):
-            print("train_model_222")
+#             print("train_model_222")
             gen = torch.load(f'{checkpoint_file}.pt', map_location=device)
             print(gen)
         samples = gen.sample(n=530, with_grad=False).cpu()
@@ -112,7 +112,7 @@ def train_gan_model(device, ds_gwb, modelCodeModule, checkpoint_file_suffix : st
     
     
     # inception_score
-    print(f'The size of samples:{type(samples)}')
+#     print(f'The size of samples:{type(samples)}')
     
 
     """    
@@ -123,10 +123,10 @@ def train_gan_model(device, ds_gwb, modelCodeModule, checkpoint_file_suffix : st
 
     """
 #     temp = gen.sample(n=530, with_grad=False)
-    print(samples.shape)
+#     print(samples.shape)
 #     samples = torch.unsqueeze(samples, 0) #to get 1×C×H×W
-    curr_inception_score, _ = inception_score(samples,cuda=True,batch_size=64, resize=True)
-    print(f'Inception Score: {curr_inception_score}')
+#     curr_inception_score, _ = inception_score(samples,cuda=True,batch_size=64, resize=True)
+#     print(f'Inception Score: {curr_inception_score}')
 #     mean , scores = inception_score(samples, cuda=True, batch_size=32, resize=False, splits=1)
 #     print(f'Inception score of {checkpoint_file_suffix}: scores are: {scores} and mean score is: {mean}.')
     
@@ -143,8 +143,8 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
         return optim.__dict__[optimizer_type](model_params, **opt_params)
     
 #     print(hp)
-    num_epochs = 100
-#     num_epochs = 20
+    num_epochs = 300
+#     num_epochs = 100
     
     # load params
     batch_size = hp['batch_size']
@@ -235,7 +235,7 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
         #    print("444")
             # do checkpoint
             if v_gan.save_checkpoint(gen, dsc_avg, gen_avg, checkpoint_file):
-                print("333")
+#                 print("333")
                 print(f'Saved checkpoint - {epoch + 1}/{num_epochs}')
 
 #             samples = gen.sample(5, with_grad=False)
