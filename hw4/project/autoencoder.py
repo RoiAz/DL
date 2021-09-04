@@ -2,6 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+"""
+Based on our autoencoder from homework
+"""
 
 class EncoderCNN(nn.Module):
     def __init__(self, in_channels, out_channels):

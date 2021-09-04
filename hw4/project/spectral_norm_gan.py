@@ -7,6 +7,10 @@ from torch.utils.data import DataLoader
 from torch.optim.optimizer import Optimizer
 from .autoencoder import EncoderCNN, DecoderCNN
 
+""" Code is based on the paper reference(we got here): 
+    https://arxiv.org/pdf/1802.05957.pdf
+    which dealing with spectral-normalization for gan
+    & with the help of our hw3 task """
 
 class Discriminator(nn.Module):
     def __init__(self, in_size):
@@ -295,8 +299,9 @@ def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
     len(gen_losses) > 3 and mean([gen_losses[-2], gen_losses[-3], gen_losses[-3]]) > gen_losses[-1]:
         early_stopping = True
     
-    torch.save(gen_model, checkpoint_file)
-    saved = True
+    if early_stopping:
+        torch.save(gen_model, checkpoint_file)
+        saved = True
     # ========================
 
     return saved

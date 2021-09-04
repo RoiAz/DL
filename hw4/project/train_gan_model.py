@@ -1,26 +1,28 @@
+import cs236781.plot as plot
+import cs236781.download
+import re
+import zipfile
 import unittest
+import urllib
+import shutil
 import os
 import sys
 import pathlib
-import urllib
-import shutil
-import re
-import zipfile
-
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
-
-import cs236781.plot as plot
-import cs236781.download
-
 import tqdm
 from torch.utils.data import DataLoader
 import torch.optim as optim
 # import torch.nn.Upsample as upsample 
 from .score_inception import inception_score
-# Based HW3
 reset = False
+
+
+"""
+Training model using two different function, for model-train and gan-train
+Based on the implementation idea of hw3
+"""
 
 # hyperparams
 def v_gan_hyperparams():
@@ -73,7 +75,7 @@ def w_gan_hyperparams():
             type='RMSprop',
             lr=0.0001 ,
         ),
-        N = 5 # for each generator update, we will to 5 discriminator updates.
+        N = 5 
     )
     return hypers
 
@@ -82,11 +84,9 @@ def train_gan_model(device, ds_gwb, modelCodeModule, checkpoint_file_suffix : st
     print(hyperparams)
     print(modelCodeModule)
     imageDir = os.path.join('project_imgs', checkpoint_file_suffix)
-    # create dir
     if not os.path.exists(imageDir):
         os.makedirs(imageDir)
     
-    # lornd from the model only if needed
     imageSrc = os.path.join(imageDir,'{}_sample_images.pt'.format(checkpoint_file_suffix))
     gen = None
     if os.path.exists(imageSrc) and not reset:
@@ -106,8 +106,8 @@ def train_gan_model(device, ds_gwb, modelCodeModule, checkpoint_file_suffix : st
 
     
     # plot images
-    print('*** Images Generated from model of the {}:'.format(checkpoint_file_suffix))
-    fig, _ = plot.tensors_as_images(samples, nrows=1, figsize=(20,20))
+#     print('*** Images Generated from model of the {}:'.format(checkpoint_file_suffix))
+#     fig, _ = plot.tensors_as_images(samples, nrows=1, figsize=(20,20))
     
     
     
@@ -142,9 +142,9 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
         opt_params.pop('type')
         return optim.__dict__[optimizer_type](model_params, **opt_params)
     
-    print(hp)
+#     print(hp)
 #     num_epochs = 100
-    num_epochs = 10
+    num_epochs = 20
     
     # load params
     batch_size = hp['batch_size']
@@ -162,7 +162,7 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
 #     print(f'$$$$$$$$$$$$$$$ scores are {scores} and mean score is{mean}.')
     
     # add model to device
-    print("run model on device: ",device)
+#     print("run model on device: ",device)
     dsc = v_gan.Discriminator(data[0][0].shape).to(device)
     gen = v_gan.Generator(z_dim, featuremap_size=4).to(device)
     
@@ -185,7 +185,7 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
         os.remove(f'{checkpoint_file}.pt')
 
     if os.path.isfile(f'{checkpoint_file_final}.pt'):
-        print(f'*** load final file {checkpoint_file_final} instead of training')
+#         print(f'*** load final file {checkpoint_file_final} instead of training')
         num_epochs = 0
         gen = torch.load(f'{checkpoint_file_final}.pt', map_location=device)
         checkpoint_file = checkpoint_file_final
@@ -269,7 +269,6 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
 #         gen_listToStr = ''.join([str(elem)+"\n" for elem in gen_avg])
         file.write(''.join(gen_listToStr))
         file.close()
-        
         
     
     except KeyboardInterrupt as e:

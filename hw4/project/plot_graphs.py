@@ -1,61 +1,8 @@
 import matplotlib.pyplot as plt
 
-# https://www.geeksforgeeks.org/graph-plotting-in-python-set-1/
-"""
-# line 1 points
-x1 = [1,2,3]
-y1 = [2,4,1]
-# plotting the line 1 points
-plt.plot(x1, y1, label = "line 1")
- 
-# line 2 points
-x2 = [1,2,3]
-y2 = [4,1,3]
-# plotting the line 2 points
-plt.plot(x2, y2, label = "line 2")
- 
-# naming the x axis
-plt.xlabel('x - axis')
-# naming the y axis
-plt.ylabel('y - axis')
-# giving a title to my graph
-plt.title('Two lines on same graph!')
- 
-# show a legend on the plot
-plt.legend()
- 
-# function to show the plot
-plt.show()
-"""    
-
-
-# https://stackoverflow.com/questions/36008626/how-to-plot-a-graph-in-python-using-txt-file-with-float-value-in-it
-"""
-import numpy as np
-import matplotlib.pyplot as plt
-
-with open("test-1-14M.txt") as f:
-    data = f.read()
-
-data = data.split('\n')
-
-x = [row.split(' ')[0] for row in data]
-y = [row.split(' ')[0] for row in data]
-
-fig = plt.figure()
-
-ax1 = fig.add_subplot(70)
-
-ax1.set_title("Plot title...")    
-ax1.set_xlabel('your x label..')
-ax1.set_ylabel('your y label...')
-
-ax1.plot(x, y, c='r', label='the data')
-
-leg = ax1.legend()
-
-plt.show()
-
+""" Based on examples online, such as:
+    # https://www.geeksforgeeks.org/graph-plotting-in-python-set-1/
+    # https://stackoverflow.com/questions/36008626/how-to-plot-a-graph-in-python-using-txt-file-with-float-value-in-it
 """
 
 def plot_graph(first_file, second_file, graph_title: str, x_title: str, y_title: str):
