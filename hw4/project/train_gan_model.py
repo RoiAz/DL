@@ -25,25 +25,6 @@ reset = False
 # hyperparams
 def v_gan_hyperparams():
     hypers = dict(
-        batch_size=0,
-        z_dim=0,
-        data_label=0,
-        label_noise=0.0,
-        discriminator_optimizer=dict(
-            type="",  # Any name in nn.optim like SGD, Adam
-            lr=0.0,
-            # You an add extra args for the optimizer here
-        ),
-        generator_optimizer=dict(
-            type="",  # Any name in nn.optim like SGD, Adam
-            lr=0.0,
-            # You an add extra args for the optimizer here
-        ),
-    )
-    # TODO: Tweak the hyperparameters to train your GAN.
-    # ====== YOUR CODE: ======
-    type = 'Adam'
-    hypers = dict(
         batch_size=32,
         z_dim=128,
         data_label=1,
@@ -53,35 +34,15 @@ def v_gan_hyperparams():
             lr=0.0075 ,
         ),
         generator_optimizer=dict(
-            type=type,
+            type="Adam",
             lr= 0.001,
             betas =(0.5, 0.999),
         ),
     )
-    # ========================
     return hypers
 
 def sn_gan_hyperparams():
     hypers = dict(
-        batch_size=0,
-        z_dim=0,
-        data_label=0,
-        label_noise=0.0,
-        discriminator_optimizer=dict(
-            type="",  # Any name in nn.optim like SGD, Adam
-            lr=0.0,
-            # You an add extra args for the optimizer here
-        ),
-        generator_optimizer=dict(
-            type="",  # Any name in nn.optim like SGD, Adam
-            lr=0.0,
-            # You an add extra args for the optimizer here
-        ),
-    )
-    # TODO: Tweak the hyperparameters to train your GAN.
-    # ====== YOUR CODE: ======
-    type = 'Adam'
-    hypers = dict(
         batch_size=32,
         z_dim=128,
         data_label=1,
@@ -91,50 +52,29 @@ def sn_gan_hyperparams():
             lr=0.0075 ,
         ),
         generator_optimizer=dict(
-            type=type,
+            type="Adam",
             lr= 0.001,
             betas =(0.5, 0.999),
         ),
     )
-    # ========================
     return hypers
 
 def w_gan_hyperparams():
-    hypers = dict(
-        batch_size=0,
-        z_dim=0,
-        data_label=0,
-        label_noise=0.0,
-        discriminator_optimizer=dict(
-            type="",  # Any name in nn.optim like SGD, Adam
-            lr=0.0,
-            # You an add extra args for the optimizer here
-        ),
-        generator_optimizer=dict(
-            type="",  # Any name in nn.optim like SGD, Adam
-            lr=0.0,
-            # You an add extra args for the optimizer here
-        ),
-    )
-    # TODO: Tweak the hyperparameters to train your GAN.
-    # ====== YOUR CODE: ======
-    type = 'RMSprop'
     hypers = dict(
         batch_size=32,
         z_dim=128,
         data_label=1,
         label_noise=0.0002,
         discriminator_optimizer=dict(
-            type=type,
+            type='RMSprop',
             lr=0.000035 ,
         ),
         generator_optimizer=dict(
-            type=type,
+            type='RMSprop',
             lr=0.0001 ,
         ),
         N = 5 # for each generator update, we will to 5 discriminator updates.
     )
-    # ========================
     return hypers
 
 def train_gan_model(device, ds_gwb, modelCodeModule, checkpoint_file_suffix : str, hyperparams:dict):
@@ -285,14 +225,14 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
             np_inception_score, _ = inception_score(samples,cuda=True,batch_size=64, resize=True)
             
             # debbug
-            print(f'inception shape: {np_inception_score.shape}')
-            print(f'inception type: {type(np_inception_score)}')
+         #   print(f'inception shape: {np_inception_score.shape}')
+          #  print(f'inception type: {type(np_inception_score)}')
             
             int_inception_score = np_inception_score.tolist()
             inception_lst.append(int_inception_score)
             
             
-            print("444")
+        #    print("444")
             # do checkpoint
             if v_gan.save_checkpoint(gen, dsc_avg, gen_avg, checkpoint_file):
                 print("333")

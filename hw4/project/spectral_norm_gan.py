@@ -15,6 +15,8 @@ class Discriminator(nn.Module):
         """
         super().__init__()
         self.in_size = in_size
+       # print("ssizeeee")
+        #print(in_size)
         # TODO: Create the discriminator model layers.
         #  To extract image features you can use the EncoderCNN from the VAE
         #  section or implement something new.
@@ -24,16 +26,32 @@ class Discriminator(nn.Module):
         modules = []
         cin = in_size[0]
         cout = in_size[1] * 2
-        #channel_list = [in_channels] + [128] + [256]  + [512] + [1024]
+        channel_list = [cin] + [128] + [256]  + [512] + [1024]
 
         for ci in range(4):
-#             modules.append(nn.Conv2d(in_channels=cin, out_channels=cout, kernel_size=5, stride=2, padding=2))
-#             modules.append(nn.BatchNorm2d(cout))
-            modules.append(nn.utils.spectral_norm(nn.Conv2d(in_channels=cin, out_channels=cout, kernel_size=5, stride=2, padding=2), name='weight', n_power_iterations=1, eps=1e-12, dim=None))
-            modules.append(nn.LeakyReLU(negative_slope=0.05))
+            modules.append(nn.utils.spectral_norm(nn.Conv2d(in_channels=cin, out_channels=cout, kernel_size=5, stride=2, padding=2, bias=False)))
+            modules.append(nn.LeakyReLU(0.1))
             cin = cout
             cout = cout *2
-        modules.append(nn.Sigmoid())
+        #modules.append(nn.Sigmoid())
+        
+#         modules.append(nn.utils.spectral_norm(nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1)))
+#         modules.append(nn.LeakyReLU(0.1))
+#         modules.append(nn.utils.spectral_norm(nn.Conv2d(in_channels=64, out_channels=64, kernel_size=4, stride=2)))
+#         modules.append(nn.LeakyReLU(0.1))
+#         modules.append(nn.utils.spectral_norm(nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1)))
+#         modules.append(nn.LeakyReLU(0.1))
+#         modules.append(nn.utils.spectral_norm(nn.Conv2d(in_channels=128, out_channels=256, kernel_size=4, stride=2)))
+#         modules.append(nn.LeakyReLU(0.1))
+#         modules.append(nn.utils.spectral_norm(nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1)))
+#         modules.append(nn.LeakyReLU(0.1))
+#         modules.append(nn.utils.spectral_norm(nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=2)))        
+#         modules.append(nn.LeakyReLU(0.1))
+#         modules.append(nn.utils.spectral_norm(nn.Conv2d(in_channels=512, out_channels=cout, kernel_size=3, stride=1)))
+#         modules.append(nn.LeakyReLU(0.1))
+
+
+
         self.feature_extractor = nn.Sequential(*modules)
         self.classifier = nn.Linear(4 * in_size[1] * in_size[2],1)
         # ========================
@@ -50,6 +68,9 @@ class Discriminator(nn.Module):
         #  with the loss due to improved numerical stability.
         # ====== YOUR CODE: ======
         feats = self.feature_extractor.forward(x).view(x.shape[0], -1)
+      #  print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+       # print(feats.shape)
+       # print(feats)
         y = self.classifier(feats)
         # ========================
         return y
@@ -65,6 +86,7 @@ class Generator(nn.Module):
         """
         super().__init__()
         self.z_dim = z_dim
+        self.z_dim = 128
 
         # TODO: Create the generator model layers.
         #  To combine image features you can use the DecoderCNN from the VAE
@@ -79,17 +101,32 @@ class Generator(nn.Module):
         for ci in range(4):
             modules.append(nn.ConvTranspose2d(in_channels=cin, out_channels=cout, kernel_size=5, stride=2, padding=2, output_padding=1))
             modules.append(nn.BatchNorm2d(cout))
-            modules.append(nn.LeakyReLU(negative_slope=0.05))
+            modules.append(nn.ReLU())
             cin = cout
             if cin < (1024 // 4):
                 modules.append(nn.ConvTranspose2d(in_channels=cin, out_channels=out_channels, kernel_size=5, stride=2, padding=2, output_padding=1))
-                #modules.append(nn.LeakyReLU(negative_slope=0.05))
-                modules.append(nn.Tanh())
+              #  modules.append(nn.ReLU())
                 break
             cout = cout // 2
-             
+        modules.append(nn.Tanh())
         self.reconstructor = nn.Sequential(*modules)
         self.feats = nn.Linear(z_dim, 1024 * (featuremap_size **2))
+
+        
+#         modules.append(nn.ConvTranspose2d(in_channels=1024, out_channels=512, kernel_size=4, stride=2))
+#         modules.append(nn.BatchNorm2d(512))
+#         modules.append(nn.ReLU())
+#         modules.append(nn.ConvTranspose2d(in_channels=512, out_channels=256, kernel_size=4, stride=2))
+#         modules.append(nn.BatchNorm2d(256))
+#         modules.append(nn.ReLU())
+#         modules.append(nn.ConvTranspose2d(in_channels=256, out_channels=128, kernel_size=2, stride=2))
+#         modules.append(nn.BatchNorm2d(128))
+#         modules.append(nn.ReLU())
+#         modules.append(nn.utils.spectral_norm(nn.Conv2d(in_channels=128, out_channels=3, kernel_size=3, stride=1)))    
+#         modules.append(nn.Tanh())
+#         self.reconstructor = nn.Sequential(*modules)
+#         self.feats = nn.Linear(z_dim, 1024 * (featuremap_size **2))
+            
         # ========================
 
     def sample(self, n, with_grad=False):
@@ -121,8 +158,12 @@ class Generator(nn.Module):
         #  Don't forget to make sure the output instances have the same
         #  dynamic range as the original (real) images.
         # ====== YOUR CODE: ======
+        #feats =  self.feats(z).reshape(-1, 512, self.feat_size, self.feat_size)
         feats =  self.feats(z).reshape(-1, 1024, self.feat_size, self.feat_size)
+        #print("$$$$$$$$$$$$")
+       # print(feats.shape)
         x = self.reconstructor(feats)
+        #print(x.shape)
         # ========================
         return x
 
@@ -231,36 +272,6 @@ def train_batch(
 
     return dsc_loss.item(), gen_loss.item()
 
-
-# def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
-#     """
-#     Saves a checkpoint of the generator, if necessary.
-#     :param gen_model: The Generator model to save.
-#     :param dsc_losses: Avg. discriminator loss per epoch.
-#     :param gen_losses: Avg. generator loss per epoch.
-#     :param checkpoint_file: Path without extension to save generator to.
-#     """
-
-#     saved = False
-#     checkpoint_file = f"{checkpoint_file}.pt"
-
-#     # TODO:
-#     #  Save a checkpoint of the generator model. You can use torch.save().
-#     #  You should decide what logic to use for deciding when to save.
-#     #  If you save, set saved to True.
-#     # ====== YOUR CODE: ====== 
-#     from statistics import mean
-#     early_stopping = False
-#     if len(dsc_losses) > 3 and mean([dsc_losses[-2], dsc_losses[-3], dsc_losses[-3]]) > dsc_losses[-1] and \
-#     len(gen_losses) > 3 and mean([gen_losses[-2], gen_losses[-3], gen_losses[-3]]) > gen_losses[-1]:
-#         early_stopping = True
-    
-#     if early_stopping:
-#             torch.save(gen_model, checkpoint_file)
-#             saved = True
-#     # ========================
-
-#     return saved
 def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
     """
     Saves a checkpoint of the generator, if necessary.
@@ -277,17 +288,15 @@ def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
     #  Save a checkpoint of the generator model. You can use torch.save().
     #  You should decide what logic to use for deciding when to save.
     #  If you save, set saved to True.
-    # ====== YOUR CODE: ======
-    if checkpoint_file is None:
-        print("check1")
-        return saved
+    # ====== YOUR CODE: ====== 
+    from statistics import mean
+    early_stopping = False
+    if len(dsc_losses) > 3 and mean([dsc_losses[-2], dsc_losses[-3], dsc_losses[-3]]) > dsc_losses[-1] and \
+    len(gen_losses) > 3 and mean([gen_losses[-2], gen_losses[-3], gen_losses[-3]]) > gen_losses[-1]:
+        early_stopping = True
     
-    if len(gen_losses) > 2 and  dsc_losses[-1] > dsc_losses[-2] and dsc_losses[-1] > dsc_losses[-2]:
-        print("check2")
-        torch.save(gen_model, checkpoint_file)
-        saved=True
-        
-    print("check3")
+    torch.save(gen_model, checkpoint_file)
+    saved = True
     # ========================
 
     return saved
