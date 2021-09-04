@@ -11,7 +11,7 @@ def plot_graph(first_file, second_file, graph_title: str, x_title: str, y_title:
 
     for line in open(first_file, 'r'):
         lines = [float(i) for i in line.split()]
-        print(f'first_file lines: {lines}')
+#         print(f'first_file lines: {lines}')
         for idx, num in enumerate(lines):
 #             print(num)
             x1.append(float(num))
@@ -24,7 +24,7 @@ def plot_graph(first_file, second_file, graph_title: str, x_title: str, y_title:
     
     for line in open(second_file, 'r'):
         lines = [float(i) for i in line.split()]
-        print(f'second_file lines: {lines}')
+#         print(f'second_file lines: {lines}')
         for idx, num in enumerate(lines):
             x2.append(float(num))
             y2.append(idx)
@@ -52,7 +52,7 @@ def plot_inception_graph(first_file, graph_title: str, x_title: str, y_title: st
 
     for line in open(first_file, 'r'):
         lines = [float(i) for i in line.split()]
-        print(f'first_file lines: {lines}')
+#         print(f'first_file lines: {lines}')
         for idx, num in enumerate(lines):
 #             print(num)
             x1.append(float(num))
@@ -81,7 +81,7 @@ def plot_all_inceptions_graph(first_file, second_file, third_file, forth_file, g
 
     for line in open(first_file, 'r'):
         lines = [float(i) for i in line.split()]
-        print(f'first_file lines: {lines}')
+#         print(f'first_file lines: {lines}')
         for idx, num in enumerate(lines):
 #             print(num)
             x1.append(float(num))
@@ -94,7 +94,7 @@ def plot_all_inceptions_graph(first_file, second_file, third_file, forth_file, g
     
     for line in open(second_file, 'r'):
         lines = [float(i) for i in line.split()]
-        print(f'second_file lines: {lines}')
+#         print(f'second_file lines: {lines}')
         for idx, num in enumerate(lines):
             x2.append(float(num))
             y2.append(idx)
@@ -105,7 +105,7 @@ def plot_all_inceptions_graph(first_file, second_file, third_file, forth_file, g
 
     for line in open(third_file, 'r'):
         lines = [float(i) for i in line.split()]
-        print(f'second_file lines: {lines}')
+#         print(f'second_file lines: {lines}')
         for idx, num in enumerate(lines):
             x3.append(float(num))
             y3.append(idx)
@@ -116,7 +116,7 @@ def plot_all_inceptions_graph(first_file, second_file, third_file, forth_file, g
     
     for line in open(forth_file, 'r'):
         lines = [float(i) for i in line.split()]
-        print(f'second_file lines: {lines}')
+#         print(f'second_file lines: {lines}')
         for idx, num in enumerate(lines):
             x4.append(float(num))
             y4.append(idx)

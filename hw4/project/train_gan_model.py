@@ -83,7 +83,7 @@ def train_gan_model(device, ds_gwb, modelCodeModule, checkpoint_file_suffix : st
     print(type(device))
     print(hyperparams)
     print(modelCodeModule)
-    imageDir = os.path.join('project_imgs', checkpoint_file_suffix)
+    imageDir = os.path.join('project/generated_imgs', checkpoint_file_suffix)
     if not os.path.exists(imageDir):
         os.makedirs(imageDir)
     
@@ -143,8 +143,8 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
         return optim.__dict__[optimizer_type](model_params, **opt_params)
     
 #     print(hp)
-#     num_epochs = 100
-    num_epochs = 20
+    num_epochs = 100
+#     num_epochs = 20
     
     # load params
     batch_size = hp['batch_size']
