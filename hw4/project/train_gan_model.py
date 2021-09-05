@@ -144,7 +144,6 @@ def train_gan(v_gan,hp,data,device,gan_type_for_checkpoint_file :str):
     
 #     print(hp)
     num_epochs = 300
-#     num_epochs = 100
     
     # load params
     batch_size = hp['batch_size']
